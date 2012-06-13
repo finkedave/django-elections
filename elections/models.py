@@ -630,3 +630,407 @@ class PACContribution(models.Model):
     def __unicode__(self):
         return u"%s gave $%s to %s on %s ".join(self.pac_name, self.amount, 
             self.recipient_committee, self.event_date.isoformat())
+    
+    
+class PercentField(models.DecimalField):
+    def __init__(self, verbose_name=None, name=None, max_digits=5, decimal_places=2, **kwargs):
+        super(PercentField, self).__init__(verbose_name=None, name=None, 
+                                             max_digits=5, decimal_places=2, **kwargs)
+    
+class Demographics(models.Model):
+    population = models.IntegerField(blank=True, null=True)
+    white_percent = PercentField(blank=True, null=True)
+    black_percent = PercentField(blank=True, null=True)
+    indian_alaska_native_percent = PercentField(blank=True, null=True)
+    asian_percent = PercentField(blank=True, null=True)
+    hawian_pacific_islander_percent = PercentField(blank=True, null=True)
+    mixed_race_percent = PercentField(blank=True, null=True)
+    other_race_percent = PercentField(blank=True, null=True)
+    hispanic_percent = PercentField(blank=True, null=True)
+    non_hispanic_white_percent = PercentField(blank=True, null=True)
+    non_hispanic_black_percent = PercentField(blank=True, null=True)
+    households_all_speak_other_than_english_percent = PercentField(blank=True, null=True)
+    median_household_income = models.IntegerField(blank=True, null=True)
+    married_couple_both_work_percent = PercentField(blank=True, null=True)
+    income_poverty_1999_percent = PercentField(blank=True, null=True)
+    different_house_in_1995_percent = PercentField(blank=True, null=True)
+    homes_heated_elec_percent = PercentField(blank=True, null=True)
+    homes_heated_gas_percent = PercentField(blank=True, null=True)
+    homes_heated_coal_percent = PercentField(blank=True, null=True)
+    homes_heated_fuel_oil_percent = PercentField(blank=True, null=True)
+    populations_65_and_up_percent = PercentField(blank=True, null=True)
+    employed_civilians_16_and_up_percent = PercentField(blank=True, null=True)
+    college_degree_percent = PercentField(blank=True, null=True)
+    management_professional_worker_percent = PercentField(blank=True, null=True)
+    sales_office_worker_percent = PercentField(blank=True, null=True)
+    production_transport_worker_percent = PercentField(blank=True, null=True)
+    unemployment_current = PercentField(blank=True, null=True)
+    unemployment_date_current = models.DateField(blank=True, null=True)
+    unemployment_monthly_change = PercentField(blank=True, null=True)
+    married_couple_family_percent = PercentField(blank=True, null=True)
+    married_couple_family_w_children_percent = PercentField(blank=True, null=True)
+    unmarried_partner_households_m_with_m_percent = PercentField(blank=True, null=True)
+    unmarried_partner_households_f_with_f_percent = PercentField(blank=True, null=True) 
+    
+    IMPORT_MAPPING = [
+        'population',
+        'white_percent',
+        'black_percent',
+        'indian_alaska_native_percent',
+        'asian_percent',
+        'hawian_pacific_islander_percent',
+        'mixed_race_percent',
+        'other_race_percent',
+        'hispanic_percent',
+        'non_hispanic_white_percent',
+        'non_hispanic_black_percent',
+        'households_all_speak_other_than_english_percent',
+        'median_household_income',
+        'married_couple_both_work_percent',
+        'income_poverty_1999_percent',
+        'different_house_in_1995_percent',
+        'homes_heated_elec_percent',
+        'homes_heated_gas_percent',
+        'homes_heated_coal_percent',
+        'homes_heated_fuel_oil_percent',
+        'populations_65_and_up_percent' ,
+        'employed_civilians_16_and_up_percent',
+        'college_degree_percent',
+        'management_professional_worker_percent',
+        'sales_office_worker_percent',
+        'production_transport_worker_percent',
+        'unemployment_current',
+        'unemployment_date_current',
+        'unemployment_monthly_change',
+        'married_couple_family_percent',
+        'married_couple_family_w_children_percent',
+        'unmarried_partner_households_m_with_m_percent',
+        'unmarried_partner_households_f_with_f_percent']
+
+    class Meta:
+        abstract = True
+        
+class State(Demographics):
+    state_id = models.CharField(max_length=2, primary_key=True)
+    postal = models.CharField(max_length=2)
+    name = models.CharField(max_length=25)
+    us_senate_split = models.CharField(max_length=100, blank=True, null=True)
+    us_house_split = models.CharField(max_length=100, blank=True, null=True)
+    state_sentate_split = models.CharField(max_length=100, blank=True, null=True)
+    state_house_split = models.CharField(max_length=100, blank=True, null=True)
+    president = models.CharField(max_length=100, blank=True, null=True)
+    governor = models.CharField(max_length=100, blank=True, null=True)
+    us_senate_1 = models.CharField(max_length=100, blank=True, null=True)
+    us_senate_2 = models.CharField(max_length=100, blank=True, null=True)
+    us_house = models.CharField(max_length=100, blank=True, null=True)
+    questions = models.TextField(blank=True, null=True)
+    other_races = models.TextField(blank=True, null=True)
+    state_summary = models.TextField(blank=True, null=True)
+    capitol = models.CharField(max_length=100, blank=True, null=True)
+    nickname = models.CharField(max_length=100, blank=True, null=True)
+    bird = models.CharField(max_length=100, blank=True, null=True)
+    flower = models.CharField(max_length=100, blank=True, null=True)
+    moto_english = models.CharField(max_length=255, blank=True, null=True)
+    moto_other = models.CharField(max_length=255, blank=True, null=True)
+    electoral_votes = models.IntegerField(blank=True, null=True)
+    dem_delegates = models.IntegerField(blank=True, null=True)
+    rep_delegates = models.IntegerField(blank=True, null=True) 
+    
+    sos_last_name = models.CharField(max_length=50, blank=True, null=True)
+    sos_first_name = models.CharField(max_length=50, blank=True, null=True)
+    sos_middle_name = models.CharField(max_length=50, blank=True, null=True)
+    sos_suffix = models.CharField(max_length=25, blank=True, null=True)
+    sos_address = models.CharField(max_length=255, blank=True, null=True)
+    sos_city = models.CharField(max_length=50, blank=True, null=True)
+    sos_state = models.CharField(max_length=25, blank=True, null=True)
+    sos_zip = models.CharField(max_length=25, blank=True, null=True)
+    sos_phone = models.CharField(blank=True, null=True, max_length=30)
+    sos_fax = models.CharField(blank=True, null=True, max_length=30)
+    sos_email = models.CharField(blank=True, null=True, max_length=50) 
+    sos_url = models.CharField(blank=True, null=True, max_length=100) 
+
+    slug = models.SlugField()
+    checksum = models.CharField(max_length=32)
+
+    IMPORT_MAPPING =  [
+        'state_id',
+        'postal',
+        'name',
+        'us_senate_split',
+        'us_house_split',
+        'state_sentate_split',
+        'state_house_split',
+        'president',
+        'governor',
+        'us_senate_1',
+        'us_senate_2',
+        'us_house',
+        'questions',
+        'other_races',
+        'state_summary',
+        'capitol',
+        'nickname',
+        'bird',
+        'flower',
+        'moto_english',
+        'moto_other',
+        'electoral_votes',
+        'dem_delegates',
+        'rep_delegates',
+        'sos_last_name',
+        'sos_first_name',
+        'sos_middle_name',
+        'sos_suffix',
+        'sos_address',
+        'sos_city',
+        'sos_state',
+        'sos_zip',
+        'sos_phone',
+        'sos_fax',
+        'sos_email',
+        'sos_url']
+    IMPORT_MAPPING.extend(Demographics.IMPORT_MAPPING)
+    
+    def __unicode__(self):
+        return self.name
+        
+    def save(self, *args, **kwargs):
+        """
+        Add the checksum
+        """
+        self.checksum = self.calculate_checksum()
+        if not self.slug:
+            from django.template.defaultfilters import slugify
+            
+            self.slug = slugify(self.state_id)
+        super(State, self).save(*args, **kwargs)
+
+    
+    def calculate_checksum(self):
+        """
+        Calculate the MD5 checksum for the record
+        """
+        return calculate_checksum(self)
+    
+    def election_events(self):
+        return ElectionEvent.objects.filter(state=self.state_id)
+    
+    def districts(self):
+        return District.objects.filter(state_postal=self.postal)
+    
+    def past_elections(self):
+        PastElection.objects.filter(state_postal=self.spostal)
+        
+class PresidentialElectionResult(models.Model):
+    state = models.ForeignKey(State)
+    election_year = models.IntegerField()
+    dem_vote = PercentField(blank=True, null=True)
+    rep_vote = PercentField(blank=True, null=True)
+    dem_pres_primary_winner = models.CharField(max_length=100, blank=True, null=True)
+    dem_pres_primary_percent = PercentField(blank=True, null=True)
+    rep_pres_primary_winner = models.CharField(max_length=100, blank=True, null=True)
+    rep_pres_primary_percent = PercentField(blank=True, null=True)
+    checksum = models.CharField(max_length=32)
+    
+    IMPORT_MAPPING = [
+    'election_year',
+    'dem_vote',
+    'rep_vote',
+    'dem_pres_primary_winner',
+    'dem_pres_primary_percent',
+    'rep_pres_primary_winner',
+    'rep_pres_primary_percent',                                 
+    ]
+    
+    def save(self, *args, **kwargs):
+        """
+        Add the checksum
+        """
+        self.checksum = self.calculate_checksum()
+        super(PresidentialElectionResult, self).save(*args, **kwargs)
+        
+    class Meta:
+        ordering = ['-election_year',]
+        unique_together = ('state', 'election_year' )
+    
+    def calculate_checksum(self):
+        """
+        Calculate the MD5 checksum for the record
+        """
+        return calculate_checksum(self)
+    
+class District(Demographics):
+    district_id = models.CharField(max_length=10, primary_key=True)
+    district_number = models.IntegerField()
+    state_postal = models.CharField(max_length=2)
+    state_name = models.CharField(max_length=25)
+    district_name = models.CharField(max_length=25)
+    # For ordering demographics go next
+    general_summary = models.TextField(blank=True, null=True)
+    slug = models.SlugField()
+    checksum = models.CharField(max_length=32)
+    
+    IMPORT_MAPPING = [
+    'district_id',
+    'state_postal',
+    'district_number',
+    'state_name',
+    'district_name']
+
+    IMPORT_MAPPING.extend(Demographics.IMPORT_MAPPING)
+    IMPORT_MAPPING.append('general_summary')
+
+    def save(self, *args, **kwargs):
+        """
+        Add the checksum
+        """
+        self.checksum = self.calculate_checksum()
+        if not self.slug:
+            from django.template.defaultfilters import slugify
+            
+            self.slug = slugify(self.district_id)
+        super(District, self).save(*args, **kwargs)
+        
+    class Meta:
+        ordering = ['state_postal', 'district_number']
+    
+    def calculate_checksum(self):
+        """
+        Calculate the MD5 checksum for the record
+        """
+        return calculate_checksum(self)
+    
+    def past_elections(self):
+        PastElection.objects.filter(state_postal=self.state_postal, 
+                                district_number=self.district_number)
+        
+ELECTION_TYPE_CHOICES = (('G', 'General Election'),
+                        ('GR', 'General Election Runoff'),
+                        ('SG', 'Special General Election'),
+                        ('P', 'Primary'),
+                        ('SP', 'Special Primary'),
+                        ('SR', 'Special Primary Runoff'),
+                        ('PR', 'Primary Runoff'),
+                        ('SB', 'All Party Special Blanket Primary'),
+                        ('NR', 'Nonpartisan Runoff Election'),
+                        ('NS', 'Nonpartisan Special Election'),
+                        ('C', 'Caucus'),
+                        ('LA', 'La. Style Nonpartisan Election'),
+                        ('LR', 'La. Style Nonpartisan Special Runoff'),
+                        ('LS', 'La. Style Nonpartisan Special Election'),)
+
+ELECTION_PARTY_CHOICES = (('D', 'Democratic Primaries'),
+                        ('R', 'Republican Primaries'),
+                        ('O', 'Mult-Party Elections'))
+
+ELECTION_OFFICE_CHOICES = (('P', 'President'),
+                        ('G', 'Governor'),
+                        ('S', 'Senate'),
+                        ('H', 'House'))
+
+class PastElection(models.Model):
+    election_id =   models.CharField(max_length=15, primary_key=True)
+    year = models.IntegerField()
+    state_postal = models.CharField(max_length=2)
+    office = models.CharField(max_length=1, choices=ELECTION_OFFICE_CHOICES, blank=True, null=True)
+    election_type = models.CharField(max_length=2, choices=ELECTION_TYPE_CHOICES, blank=True, null=True)               
+    district_number = models.IntegerField(blank=True, null=True)
+    party = models.CharField(max_length=1, choices=ELECTION_PARTY_CHOICES, blank=True, null=True)
+    state_name = models.CharField(max_length=25, blank=True, null=True)
+    office_name = models.CharField(max_length=100, blank=True, null=True)
+    election_type_name = models.CharField(max_length=100, blank=True, null=True)
+    district_name = models.CharField(max_length=25, blank=True, null=True)
+    party_name = models.CharField(max_length=100, blank=True, null=True)
+    checksum = models.CharField(max_length=32)
+    slug = models.SlugField()
+    
+    IMPORT_MAPPING =  [
+    'election_id',
+    'year',
+    'state_postal',
+    'office',
+    'election_type',
+    'district_number',
+    'party',
+    'state_name',
+    'office_name',
+    'election_type_name',
+    'district_name',
+    'party_name',
+    ]
+    
+    def save(self, *args, **kwargs):
+        """
+        Add the checksum
+        """
+        self.checksum = self.calculate_checksum()
+        if not self.slug:
+            from django.template.defaultfilters import slugify
+            
+            self.slug = slugify(self.election_id)
+        super(PastElection, self).save(*args, **kwargs)
+        
+    class Meta:
+        ordering = ['state_postal', 'district_number', 'year', 'party']
+    
+    def results(self):
+        return PastElectionResult.objects.filter(election_id=self.election_id)
+    
+    def calculate_checksum(self):
+        """
+        Calculate the MD5 checksum for the record
+        """
+        return calculate_checksum(self)
+    
+class PastElectionResult(models.Model):
+    election_id =   models.CharField(max_length=15)
+    last_name = models.CharField(max_length=50, blank=True, null=True)
+    first_name = models.CharField(max_length=50, blank=True, null=True)
+    suffix = models.CharField(max_length=25, blank=True, null=True)
+    party = models.CharField(max_length=25, blank=True, null=True)
+    vote = models.IntegerField(blank=True, null=True)
+    percent = PercentField(blank=True, null=True)
+    winner = models.NullBooleanField(blank=True, null=True)
+    checksum = models.CharField(max_length=32)
+    
+    IMPORT_MAPPING = [
+        'election_id',
+        'last_name',
+        'first_name',
+        'suffix',
+        'party',
+        'vote',
+        'percent',
+        'winner']
+    
+    def save(self, *args, **kwargs):
+        """
+        Add the checksum
+        """
+        self.checksum = self.calculate_checksum()
+        super(PastElectionResult, self).save(*args, **kwargs)
+        
+    class Meta:
+        ordering = ['party', 'last_name']
+        unique_together = ['election_id', 'last_name', 'first_name', 'suffix', 'party']
+    
+    def calculate_checksum(self):
+        """
+        Calculate the MD5 checksum for the record
+        """
+        return calculate_checksum(self)
+    
+
+def calculate_checksum(obj, mapping=None):
+    import hashlib
+    checksum = hashlib.md5()
+    
+    if not mapping:
+        mapping = obj.IMPORT_MAPPING
+    for item in mapping:
+        value = getattr(obj, item)
+        if value:
+            checksum.update(str(value))
+        else:
+            checksum.update('')
+    return checksum.hexdigest()
