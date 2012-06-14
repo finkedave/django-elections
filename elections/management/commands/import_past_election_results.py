@@ -1,7 +1,7 @@
 from django.core.management.base import LabelCommand
 from elections.models import PastElectionResult
 
-from elections.import_utils import populate_obj_w_import_data, create_checksum
+from elections.import_utils import populate_obj_w_import_data, create_checksum, normalize_data
 
 class Command(LabelCommand):
     args = '[file1 file2 ...]'
@@ -15,6 +15,7 @@ class Command(LabelCommand):
         modified_count = 0
         for row in events:
             checksum = create_checksum(row)
+            row = normalize_data(row)
             try:
                 past_election_result = PastElectionResult.objects.get(
                                                           election_id=row[0],

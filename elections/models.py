@@ -730,8 +730,8 @@ class State(Demographics):
     nickname = models.CharField(max_length=100, blank=True, null=True)
     bird = models.CharField(max_length=100, blank=True, null=True)
     flower = models.CharField(max_length=100, blank=True, null=True)
-    moto_english = models.CharField(max_length=255, blank=True, null=True)
-    moto_other = models.CharField(max_length=255, blank=True, null=True)
+    motto_english = models.CharField(max_length=255, blank=True, null=True)
+    motto_other = models.CharField(max_length=255, blank=True, null=True)
     electoral_votes = models.IntegerField(blank=True, null=True)
     dem_delegates = models.IntegerField(blank=True, null=True)
     rep_delegates = models.IntegerField(blank=True, null=True) 
@@ -772,8 +772,8 @@ class State(Demographics):
         'nickname',
         'bird',
         'flower',
-        'moto_english',
-        'moto_other',
+        'motto_english',
+        'motto_other',
         'electoral_votes',
         'dem_delegates',
         'rep_delegates',
@@ -819,7 +819,17 @@ class State(Demographics):
         return District.objects.filter(state_postal=self.postal)
     
     def past_elections(self):
-        PastElection.objects.filter(state_postal=self.spostal)
+        return PastElection.objects.filter(state_postal=self.postal,
+                                    district_number=0)
+    
+    def past_non_presidential_elections(self):
+        return PastElection.objects.filter(state_postal=self.postal,
+                                    district_number=0).exclude(office='P')
+        
+    def past_presidential_elections(self):
+        return PastElection.objects.filter(state_postal=self.postal, office='P', 
+                                           election_type='G', district_number=0,
+                                           )
         
 class PresidentialElectionResult(models.Model):
     state = models.ForeignKey(State)
@@ -901,7 +911,7 @@ class District(Demographics):
         return calculate_checksum(self)
     
     def past_elections(self):
-        PastElection.objects.filter(state_postal=self.state_postal, 
+        return PastElection.objects.filter(state_postal=self.state_postal, 
                                 district_number=self.district_number)
         
 ELECTION_TYPE_CHOICES = (('G', 'General Election'),
@@ -971,10 +981,10 @@ class PastElection(models.Model):
         super(PastElection, self).save(*args, **kwargs)
         
     class Meta:
-        ordering = ['state_postal', 'district_number', 'year', 'party']
+        ordering = ['state_postal', 'district_number', '-year', 'party']
     
     def results(self):
-        return PastElectionResult.objects.filter(election_id=self.election_id)
+        return PastElectionResult.objects.filter(election_id=self.election_id, percent__gte=2)
     
     def calculate_checksum(self):
         """
@@ -1020,7 +1030,31 @@ class PastElectionResult(models.Model):
         """
         return calculate_checksum(self)
     
-
+    def party_displayable(self):
+        displayable_party_word_list = []
+        if self.party:
+            lowercase_party = self.party.lower()
+            party_word_list = lowercase_party.split(" ")
+            displayable_party_word_list = []
+            for party_word in party_word_list:
+                if len(party_word) > 1:
+                    displayable_party_word_list.append(
+                                party_word[0].capitalize() + party_word[1:])
+                else:
+                    displayable_party_word_list.append(
+                                lowercase_party.capitalize())
+            return " ".join(displayable_party_word_list)
+            
+    def name(self):
+        name_list = []
+        if self.first_name:
+            name_list.append(self.first_name)
+        if self.last_name:
+            name_list.append(self.last_name)
+        if self.suffix:
+            name_list.append(self.suffix)
+        return " ".join(name_list) 
+    
 def calculate_checksum(obj, mapping=None):
     import hashlib
     checksum = hashlib.md5()

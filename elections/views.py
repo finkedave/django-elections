@@ -3,12 +3,12 @@ from django.core.urlresolvers import reverse
 from django.http import HttpResponseRedirect, HttpResponseForbidden, Http404
 from django.template import RequestContext
 from django.utils.translation import ugettext, ugettext_lazy as _
-
+from django.shortcuts import get_object_or_404
 
 from .models import (Candidate, RaceCounty, RaceDistrict, CountyResult, 
                     DistrictResult, CandidateOffice, CandidateEducation, 
                     CandidateOffice, CandidatePhone, CandidateURL, 
-                    ElectionEvent, PACContribution)
+                    ElectionEvent, PACContribution, State, District)
 
 def state_detail(request, state):
     """
@@ -54,3 +54,46 @@ def pac_detail(request, slug):
             context_instance=RequestContext(request))
     else:
         raise Http404
+    
+def state_profile(request, state):
+    """
+    Get a list of stuff for the state
+    """
+    state = get_object_or_404(State,
+        slug__iexact = state)
+
+    return render_to_response(
+        "elections/state_profile.html", 
+        {
+            'state':state
+        },
+        context_instance=RequestContext(request))
+
+def district_profile(request, state, district):
+    """
+    Get a list of stuff for the state
+    """
+    district = get_object_or_404(District, 
+        slug__iexact = district)
+
+    return render_to_response(
+        "elections/district_profile.html", 
+        {
+            'district':district
+        },
+        context_instance=RequestContext(request))
+
+def district_list(request, state):
+    """
+    Get a list of stuff for the state
+    """
+    state = get_object_or_404(State,
+        slug__iexact = state)
+
+    return render_to_response(
+        "elections/district_list.html", 
+        {
+            'state':state,
+            'district_list':state.districts()
+        },
+        context_instance=RequestContext(request))

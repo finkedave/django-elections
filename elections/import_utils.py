@@ -19,3 +19,12 @@ def create_checksum(data_list):
         else:
             checksum.update('')
     return checksum
+
+def normalize_data(data_list):
+    normalized_data = []
+    for data in data_list:
+        if data == "":
+            normalized_data.append(None)
+        else:
+            normalized_data.append(data)
+    return normalized_data

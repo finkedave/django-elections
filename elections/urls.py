@@ -31,6 +31,11 @@ urlpatterns = patterns('django.views.generic.list_detail',
 )
 
 urlpatterns += patterns('',
+    url(r'^(?P<state>[a-zA-Z]+)/profile/$', 'elections.views.state_profile', name="state_profile"),
+    url(r'^(?P<state>[a-zA-Z0-9_-]+)/districts/(?P<district>[a-zA-Z0-9_-]+)/profile/$', 'elections.views.district_profile', name='district_profile'),
+    url(r'^(?P<state>[A-Z][A-Z])/districts/$', 'elections.views.district_list', name="district_list"),
+
+    
     url(r'^(?P<state>[A-Z][A-Z])/$', 'elections.views.state_detail', name="state_election_details"),
     url(r'^(?P<state>\w\w)/$', 'elections.views.lc_state_redirect', name="lc_state_redirect"),
     url(r'^pacs/(?P<slug>[a-zA-Z0-9_-]+)/$', 'elections.views.pac_detail', name='pac_detail'),
