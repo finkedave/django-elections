@@ -57,7 +57,7 @@ def pac_detail(request, slug):
     
 def state_profile(request, state):
     """
-    Get a list of stuff for the state
+    Get the state profile 
     """
     state = get_object_or_404(State,
         slug__iexact = state)
@@ -71,7 +71,7 @@ def state_profile(request, state):
 
 def district_profile(request, state, district):
     """
-    Get a list of stuff for the state
+    Get the district profile
     """
     district = get_object_or_404(District, 
         slug__iexact = district)
@@ -79,13 +79,14 @@ def district_profile(request, state, district):
     return render_to_response(
         "elections/district_profile.html", 
         {
-            'district':district
+            'district':district,
+            'state':state
         },
         context_instance=RequestContext(request))
 
 def district_list(request, state):
     """
-    Get a list of stuff for the state
+    Get a list of districts for the state
     """
     state = get_object_or_404(State,
         slug__iexact = state)

@@ -633,11 +633,13 @@ class PACContribution(models.Model):
     
     
 class PercentField(models.DecimalField):
+    """ Custom field that represents percentage for statistics """
     def __init__(self, verbose_name=None, name=None, max_digits=5, decimal_places=2, **kwargs):
         super(PercentField, self).__init__(verbose_name=None, name=None, 
                                              max_digits=5, decimal_places=2, **kwargs)
     
 class Demographics(models.Model):
+    """ Abstract class that both State and District extend from """
     population = models.IntegerField(blank=True, null=True)
     white_percent = PercentField(blank=True, null=True)
     black_percent = PercentField(blank=True, null=True)
@@ -672,6 +674,9 @@ class Demographics(models.Model):
     unmarried_partner_households_m_with_m_percent = PercentField(blank=True, null=True)
     unmarried_partner_households_f_with_f_percent = PercentField(blank=True, null=True) 
     
+    """ This mapping represents the order which these are found in the import file. We
+    are just lucky that the order is the same in both state and district. Otherwise this 
+    list would just need to be copied and modified to State and District """
     IMPORT_MAPPING = [
         'population',
         'white_percent',
@@ -711,6 +716,7 @@ class Demographics(models.Model):
         abstract = True
         
 class State(Demographics):
+    """ State Model class that represents a state profile """
     state_id = models.CharField(max_length=2, primary_key=True)
     postal = models.CharField(max_length=2)
     name = models.CharField(max_length=25)
@@ -752,6 +758,7 @@ class State(Demographics):
     slug = models.SlugField()
     checksum = models.CharField(max_length=32)
 
+    """ Ordered mapping between the import file and the model """
     IMPORT_MAPPING =  [
         'state_id',
         'postal',
@@ -789,6 +796,8 @@ class State(Demographics):
         'sos_fax',
         'sos_email',
         'sos_url']
+    
+    # The demographics came after the other attributes
     IMPORT_MAPPING.extend(Demographics.IMPORT_MAPPING)
     
     def __unicode__(self):
@@ -796,13 +805,11 @@ class State(Demographics):
         
     def save(self, *args, **kwargs):
         """
-        Add the checksum
+        Add the checksum and slug
         """
         self.checksum = self.calculate_checksum()
         if not self.slug:
-            from django.template.defaultfilters import slugify
-            
-            self.slug = slugify(self.state_id)
+            self.slug = self.state_id
         super(State, self).save(*args, **kwargs)
 
     
@@ -813,25 +820,50 @@ class State(Demographics):
         return calculate_checksum(self)
     
     def election_events(self):
+        """ "get the election events for the state """
         return ElectionEvent.objects.filter(state=self.state_id)
     
     def districts(self):
+        """ Get the list of districts for the state """
         return District.objects.filter(state_postal=self.postal)
     
     def past_elections(self):
+        """ Get past elections for the state. Note the districts number = 0 
+        that means its a state election and not a district election. Otherwise
+        this would pull all elections including district elections """
         return PastElection.objects.filter(state_postal=self.postal,
                                     district_number=0)
     
     def past_non_presidential_elections(self):
+        """ get non presidental past elections """
         return PastElection.objects.filter(state_postal=self.postal,
                                     district_number=0).exclude(office='P')
         
     def past_presidential_elections(self):
+        """ get presidental past elections """
         return PastElection.objects.filter(state_postal=self.postal, office='P', 
                                            election_type='G', district_number=0,
                                            )
-        
+    
+    def sos_name(self):
+        """ helper method that combines the SOS name """
+        name_list = []
+        if self.sos_first_name:
+            name_list.append(self.sos_first_name)
+        if self.sos_middle_name:
+            name_list.append(self.sos_middle_name)
+        if self.sos_last_name:
+            name_list.append(self.sos_last_name)
+        if self.sos_suffix:
+            name_list.append(self.sos_suffix)
+        return " ".join(name_list) 
+    
 class PresidentialElectionResult(models.Model):
+    """ Model that holds info regarding presidential elections. Note this
+    info is duplicated in profilestates and oldvoteresults. So really no 
+    reason to use this table which is populated from the profilestates.txt
+    this is here just to capture the data even though its better not to use this
+    table. Its missing to much data """
     state = models.ForeignKey(State)
     election_year = models.IntegerField()
     dem_vote = PercentField(blank=True, null=True)
@@ -842,6 +874,7 @@ class PresidentialElectionResult(models.Model):
     rep_pres_primary_percent = PercentField(blank=True, null=True)
     checksum = models.CharField(max_length=32)
     
+    """ Ordered mapping """
     IMPORT_MAPPING = [
     'election_year',
     'dem_vote',
@@ -860,6 +893,7 @@ class PresidentialElectionResult(models.Model):
         super(PresidentialElectionResult, self).save(*args, **kwargs)
         
     class Meta:
+        """ Meta method that sets ordering and unique together """
         ordering = ['-election_year',]
         unique_together = ('state', 'election_year' )
     
@@ -870,6 +904,7 @@ class PresidentialElectionResult(models.Model):
         return calculate_checksum(self)
     
 class District(Demographics):
+    """ District model for containing facts and staticts on state districts """
     district_id = models.CharField(max_length=10, primary_key=True)
     district_number = models.IntegerField()
     state_postal = models.CharField(max_length=2)
@@ -880,6 +915,7 @@ class District(Demographics):
     slug = models.SlugField()
     checksum = models.CharField(max_length=32)
     
+    # The ordered mapping that maps the import file to the model.
     IMPORT_MAPPING = [
     'district_id',
     'state_postal',
@@ -892,13 +928,11 @@ class District(Demographics):
 
     def save(self, *args, **kwargs):
         """
-        Add the checksum
+        Add the checksum and slug
         """
         self.checksum = self.calculate_checksum()
         if not self.slug:
-            from django.template.defaultfilters import slugify
-            
-            self.slug = slugify(self.district_id)
+            self.slug = self.district_id
         super(District, self).save(*args, **kwargs)
         
     class Meta:
@@ -939,6 +973,7 @@ ELECTION_OFFICE_CHOICES = (('P', 'President'),
                         ('H', 'House'))
 
 class PastElection(models.Model):
+    """ Past election model """
     election_id =   models.CharField(max_length=15, primary_key=True)
     year = models.IntegerField()
     state_postal = models.CharField(max_length=2)
@@ -971,7 +1006,7 @@ class PastElection(models.Model):
     
     def save(self, *args, **kwargs):
         """
-        Add the checksum
+        Add the checksum and slug
         """
         self.checksum = self.calculate_checksum()
         if not self.slug:
@@ -981,9 +1016,11 @@ class PastElection(models.Model):
         super(PastElection, self).save(*args, **kwargs)
         
     class Meta:
+        """ Meta """
         ordering = ['state_postal', 'district_number', '-year', 'party']
     
     def results(self):
+        """ Returns the list of results for this election """
         return PastElectionResult.objects.filter(election_id=self.election_id, percent__gte=2)
     
     def calculate_checksum(self):
@@ -1003,6 +1040,7 @@ class PastElectionResult(models.Model):
     winner = models.NullBooleanField(blank=True, null=True)
     checksum = models.CharField(max_length=32)
     
+    """ Ordered mapping that maps the import file to the model """
     IMPORT_MAPPING = [
         'election_id',
         'last_name',
@@ -1031,6 +1069,9 @@ class PastElectionResult(models.Model):
         return calculate_checksum(self)
     
     def party_displayable(self):
+        """ party that is imported from the DB is ugly text. All caps. 
+        Here we just want to uppercase the first letter of each word and
+        lower the rest of the characters """
         displayable_party_word_list = []
         if self.party:
             lowercase_party = self.party.lower()
@@ -1046,6 +1087,8 @@ class PastElectionResult(models.Model):
             return " ".join(displayable_party_word_list)
             
     def name(self):
+        """ Combines the name of the result field. First name last 
+        name and then suffix """
         name_list = []
         if self.first_name:
             name_list.append(self.first_name)
@@ -1056,6 +1099,9 @@ class PastElectionResult(models.Model):
         return " ".join(name_list) 
     
 def calculate_checksum(obj, mapping=None):
+    """ Universal checksum for models that uses the IMPORT_MAPPING attribute
+    to make sure that it matches the checksum that will be calculated for an
+    imported file row """
     import hashlib
     checksum = hashlib.md5()
     

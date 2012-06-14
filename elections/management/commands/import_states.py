@@ -1,10 +1,11 @@
-import time
 import datetime
-import hashlib
 
-from django.core.management.base import LabelCommand, CommandError
+from django.core.management.base import LabelCommand
+
 from elections.models import State, PresidentialElectionResult
-from elections.import_utils import populate_obj_w_import_data, create_checksum
+from elections.import_utils import populate_obj_w_import_data, \
+                                   create_checksum, normalize_data
+
 class Command(LabelCommand):
     args = '[file1 file2 ...]'
     help = 'Imports election events'
@@ -13,12 +14,22 @@ class Command(LabelCommand):
         import csv
         events = csv.reader(open(label, 'rb'), delimiter='|')
         for row in events:
-            row[99] = datetime.datetime.strptime(row[99], "%Y-%m").date()
+            # normalize the data.
+            row = normalize_data(row)
+            
+            # covert the date columns to actual dates
+            if row[99]:
+                row[99] = datetime.datetime.strptime(row[99], "%Y-%m").date()
             
             
             state_columns = row[0:3]
-            # skip 3-14 this are election events that are on the calendar
+            # skip 3-12 this are election events that are on the calendar
             state_columns.extend(row[13:34])
+            
+            # Note this file is not normalized therefore after 2012 election, 
+            # they will probably add 6 rows. Which
+            # will have to be acounted for. So just in increase the 60 to 66 or whatever. Then add
+            # those 6 rows to their own presidential election
             presidential_election_columns = row[34:60]
             state_columns.extend(row[60:])
             
@@ -66,7 +77,8 @@ class Command(LabelCommand):
                 checksum = create_checksum(data)
                 try:
                     pres_election_result = PresidentialElectionResult.objects.get(
-                                                        election_year=year, state=state.state_id)
+                                                        election_year=year, 
+                                                        state=state.state_id)
                     if pres_election_result.checksum != checksum.hexdigest():
                         populate_obj_w_import_data(pres_election_result, data)
                         print 'Updating pres election result (%s-%s)' % (state, year)

@@ -1,7 +1,8 @@
 from django.core.management.base import LabelCommand
 from elections.models import PastElection
 
-from elections.import_utils import populate_obj_w_import_data, create_checksum
+from elections.import_utils import populate_obj_w_import_data, \
+                    create_checksum, normalize_data
 
 class Command(LabelCommand):
     args = '[file1 file2 ...]'
@@ -14,6 +15,8 @@ class Command(LabelCommand):
         skipped_count = 0
         modified_count = 0
         for row in events:
+            # normalize the data
+            row = normalize_data(row)
             checksum = create_checksum(row)
             try:
                 past_election = PastElection.objects.get(election_id=row[0])
@@ -32,4 +35,3 @@ class Command(LabelCommand):
         print 'Added %d past elections.' % added_count
         print "Modified %d past elections." % modified_count
         print 'Skipped %d past elections. No changes found' % skipped_count
-        

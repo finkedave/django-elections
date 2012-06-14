@@ -1,10 +1,9 @@
 import datetime
-import hashlib
 
 from django.core.management.base import LabelCommand
+from elections.import_utils import populate_obj_w_import_data, create_checksum, \
+                                   normalize_data
 from elections.models import District
-
-from elections.import_utils import populate_obj_w_import_data, create_checksum
 
 class Command(LabelCommand):
     args = '[file1 file2 ...]'
@@ -14,6 +13,9 @@ class Command(LabelCommand):
         import csv
         events = csv.reader(open(label, 'rb'), delimiter='|')
         for row in events:
+            row = normalize_data(row)
+            
+            # turn the columns that re dates into dates
             if row[32]:
                 row[32] = datetime.datetime.strptime(row[32], "%Y-%m").date()
             checksum = create_checksum(row)
