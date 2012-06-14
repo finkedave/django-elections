@@ -1,0 +1,62 @@
+{% extends "elections/base.html" %}
+{% block extra_head %}
+{{block.super}}
+
+<style>
+.widelabel {
+    float: left;
+    text-transform: capitalize;
+    width: 15em;
+}
+.extrawidelabel {
+    float: left;
+    text-transform: capitalize;
+    width: 25em;
+}
+.field {
+    padding-left: 1em;
+    text-align: left;
+    
+}
+.number_field {
+    padding-left: 1em;
+    text-align: right;
+    
+}
+tr.election td {
+    color: gray;
+    font-size: 120%;
+    font-weight: bold;
+    padding-top: 2ex;
+}
+tr.head td {
+    border-bottom: 1px dotted black;
+    font-weight: bold;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<h1>{{ district.state_name }} {{district.district_name}} Profile</h1>
+<ul>
+    <li><a href="#past_elections">Previous Election Results, Other Races</a></li>
+    <li><a href="#demographics">Demographics</a></li>
+</ul>
+<br/>
+<br/>
+
+<h2>Previous Election Results, other races<a name="past_elections"></a></h2>
+<br/>
+{% with district.past_elections as past_elections %}
+    {% include "elections/past_elections.html" %}
+{% endwith %}
+
+<br/>
+<br/>
+<h2>Demographics<a name="demographics"></a></h2>
+<br/>
+
+{% with district as demo_obj %} 
+    {% include "elections/demographics.html" %}
+{% endwith %}
+{% endblock %}

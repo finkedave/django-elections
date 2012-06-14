@@ -1,0 +1,146 @@
+{% load humanize %}
+
+<table class="preeln">
+<tbody><tr class="odd">
+<td class="label">Population</td>
+<td class="number_field">{{demo_obj.population|intcomma}}</td>
+</tr>
+<tr class="even">
+<td class="label">Percentage White</td>
+<td class="number_field">{{demo_obj.white_percent|floatformat:1}}%</td>
+</tr>
+<tr class="odd">
+<td class="label">Percentage Black</td>
+<td class="number_field">{{demo_obj.black_percent|floatformat:1}}%</td>
+</tr>
+<tr class="even">
+<td class="label">Percentage American Indian / Alaska Native</td>
+<td class="number_field">{{demo_obj.indian_alaska_native_percent|floatformat:1}}%</td>
+</tr>
+<tr class="odd">
+<td class="label">Percentage Asian</td>
+<td class="number_field">{{demo_obj.asian_percent|floatformat:1}}%</td>
+</tr>
+<tr class="even">
+<td class="label">Percentage Native Hawaiian / Pacific Islander</td>
+<td class="number_field">{{demo_obj.hawian_pacific_islander_percent|floatformat:1}}%</td>
+</tr>
+<tr class="odd">
+<td class="label">Percentage Mixed Race</td>
+<td class="number_field">{{demo_obj.mixed_race_percent|floatformat:1}}%</td>
+</tr>
+<tr class="even">
+<td class="label">Percentage Other Race</td>
+<td class="number_field">{{demo_obj.other_race_percent|floatformat:1}}%</td>
+</tr>
+<tr class="spacer"><td colspan="2">&nbsp;</td></tr>
+<tr class="odd">
+<td class="label">Percentage Hispanic</td>
+<td class="number_field">{{demo_obj.hispanic_percent|floatformat:1}}%</td>
+</tr>
+<tr class="even">
+<td class="label">Percentage Non Hispanic White</td>
+<td class="number_field">{{demo_obj.non_hispanic_white_percent|floatformat:1}}%</td>
+</tr>
+<tr class="odd">
+<td class="label">Percentage Non Hispanic Black</td>
+<td class="number_field">{{demo_obj.non_hispanic_black_percent|floatformat:1}}%</td>
+</tr>
+<tr class="spacer"><td colspan="2">&nbsp;</td></tr>
+<tr class="even">
+<td class="label">Percentage Households All Speak Language Other than English</td>
+<td class="number_field">{{demo_obj.households_all_speak_other_than_english_percent|floatformat:1}}%</td>
+</tr>
+<tr class="spacer"><td colspan="2">&nbsp;</td></tr>
+<tr class="odd">
+<td class="label">Median Household Income</td>
+<td class="number_field">${{demo_obj.median_household_income|intcomma}}</td>
+</tr>
+<tr class="even">
+<td class="label">Percentage Married Couple Both Work</td>
+<td class="number_field">{{demo_obj.married_couple_both_work_percent|floatformat:1}}%</td>
+</tr>
+<tr class="odd">
+<td class="label">Percentage Income in Poverty in 2009</td>
+<td class="number_field">{{demo_obj.income_poverty_1999_percent|floatformat:1}}%</td>
+</tr>
+<tr class="even">
+<td class="label">Percentage Lived in different household in 1995</td>
+<td class="number_field">{{demo_obj.different_house_in_1995_percent|floatformat:1}}%</td>
+</tr>
+<tr class="spacer"><td colspan="2">&nbsp;</td></tr>
+<tr class="odd">
+<td class="label">Percentage Homes heated by Electricity</td>
+<td class="number_field">{{demo_obj.homes_heated_elec_percent|floatformat:1}}%</td>
+</tr>
+<tr class="even">
+<td class="label">Percentage Homes heated by Gas</td>
+<td class="number_field">{{demo_obj.homes_heated_gas_percent|floatformat:1}}%</td>
+</tr>
+<tr class="odd">
+<td class="label">Percentage Homes heated by Coal</td>
+<td class="number_field">{{demo_obj.homes_heated_coal_percent|floatformat:1}}%</td>
+</tr>
+<tr class="even">
+<td class="label">Percentage Homes heated by Fuel Oil</td>
+<td class="number_field">{{demo_obj.homes_heated_fuel_oil_percent|floatformat:1}}%</td>
+</tr>
+<tr class="odd">
+<td class="label">Percentage of Population Age 65 and Up</td>
+<td class="number_field">{{demo_obj.populations_65_and_up_percent|floatformat:1}}%</td>
+</tr>
+<tr class="even">
+<td class="label">Percentage Employed Civilians 16-years-old and up</td>
+<td class="number_field">{{demo_obj.employed_civilians_16_and_up_percent|floatformat:1}}%</td>
+</tr>
+<tr class="odd">
+<td class="label">Percentage with a College Degree</td>
+<td class="number_field">{{demo_obj.college_degree_percent|floatformat:1}}%</td>
+</tr>
+<tr class="even">
+<td class="label">Percentage Management or Professional Workers</td>
+<td class="number_field">{{demo_obj.management_professional_worker_percent|floatformat:1}}%</td>
+</tr>
+<tr class="odd">
+<td class="label">Percentage Sales or Office Workers</td>
+<td class="number_field">{{demo_obj.sales_office_worker_percent|floatformat:1}}%</td>
+</tr>
+<tr class="even">
+<td class="label">Percentage Production or Transportation Workers</td>
+<td class="number_field">{{demo_obj.production_transport_worker_percent|floatformat:1}}%</td>
+</tr>
+{% if demo_obj.unemployment_current %}
+	<tr class="spacer"><td colspan="2">&nbsp;</td></tr>
+	<tr class="odd">
+	<td class="label">Unemployment rate</td>
+	<td class="number_field">{{demo_obj.unemployment_current|floatformat:1}}%</td>
+	</tr>
+
+	<tr class="even">
+	<td class="label">Unemployment figures as of</td>
+	<td class="number_field">{{demo_obj.unemployment_date_current|date:"F Y"}}</td>
+	</tr>
+	
+	<tr class="odd">
+	<td class="label">Unemployment Monthly Change</td>
+	<td class="number_field">{{demo_obj.unemployment_monthly_change|floatformat:1}}%</td>
+	</tr>
+{% endif %}
+<tr class="spacer"><td colspan="2">&nbsp;</td></tr>
+<tr class="even">
+<td class="label">Percentage Married Couples</td>
+<td class="number_field">{{demo_obj.married_couple_family_percent|floatformat:1}}%</td>
+</tr>
+<tr class="odd">
+<td class="label">Percentage Married Couples with Children</td>
+<td class="number_field">{{demo_obj.married_couple_family_w_children_percent|floatformat:1}}%</td>
+</tr>
+<tr class="even">
+<td class="label">Percentage Unmarried Partner Households, Male living with Male</td>
+<td class="number_field">{{demo_obj.unmarried_partner_households_m_with_m_percent|floatformat:1}}%</td>
+</tr>
+<tr class="odd">
+<td class="label">Percentage Unmarried Partner Households, Female living with Female</td>
+<td class="number_field">{{demo_obj.unmarried_partner_households_f_with_f_percent|floatformat:1}}%</td>
+</tr>
+</tbody></table>

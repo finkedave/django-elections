@@ -1,0 +1,10 @@
+{% extends "elections/base.html" %}
+
+
+{% block content %}
+<h1>Districts for {{state.name}}</h1>
+{% for district in district_list %}
+<a href='{% url district_profile state.slug district.slug %}'>{{district.district_name}}</a>
+<br/>
+{%endfor %}
+{% endblock %}

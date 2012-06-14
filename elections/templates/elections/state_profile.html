@@ -1,0 +1,175 @@
+{% extends "elections/base.html" %}
+{% block extra_head %}
+{{block.super}}
+
+<style>
+.widelabel {
+    float: left;
+    text-transform: capitalize;
+    width: 15em;
+}
+.extrawidelabel {
+    float: left;
+    text-transform: capitalize;
+    width: 25em;
+}
+.field {
+    padding-left: 1em;
+    text-align: left;
+    
+}
+.number_field {
+    padding-left: 1em;
+    text-align: right;
+    
+}
+tr.election td {
+    color: gray;
+    font-size: 120%;
+    font-weight: bold;
+    padding-top: 2ex;
+}
+tr.head td {
+    border-bottom: 1px dotted black;
+    font-weight: bold;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<h1>{{ state.name }} Profile</h1>
+<ul>
+    <li><a href="#info">Facts</a></li>
+    <li><a href="#election_vitals">Election Vitals</a></li>
+    <li><a href="#election_schedule">Election Schedule</a></li>
+    <li><a href="#past_pres_elections">Past Presidential Elections</a></li>
+    <li><a href="#past_elections">Previous Election Results, Other Races</a></li>
+    <li><a href="#demographics">Demographics</a></li>
+</ul>
+<br/>
+<br/>
+<h2>State Facts<a name="info"></a></h2>
+<br/>
+
+<div>
+	<span class='widelabel'>Capitol:</span>
+	<span class='field'>{{state.capitol}}</span>
+</div>
+<div>
+	<span class='widelabel'>Nickname:</span>
+	<span class='field'>{{state.nickname}}</span>
+</div>
+
+<div>
+	<span class='widelabel'>Bird:</span>
+	<span class='field'>{{state.bird}}</span>
+</div>
+
+<div>
+	<span class='widelabel'>Motto:</span>
+	<span class='field'>{{state.motto_english}}</span>
+</div>
+{% if state.moto_other %}
+<div>
+	<span class='widelabel'>Motto (Other):</span>
+	<span class='field'>{{state.moto_other}}</span>
+</div>
+{% endif %}
+<div>
+    <span class='widelabel'>Electoral Votes:</span>
+    <span class='field'>{{state.electoral_votes}}</span>
+</div>
+<div>
+    <span class='widelabel'>Democrat Delegates:</span>
+    <span class='field'>{{state.dem_delegates}}</span>
+</div>
+<div>
+	<span class='widelabel'>Republican Delegates:</span>
+	<span class='field'>{{state.rep_delegates}}</span>
+</div>
+<br/>
+<br>
+<h3>Secretary of State</h3>
+<div>
+	<span class='widelabel'>Name:</span> 
+	<span class='field'>{{state.sos_first_name}} {{state.sos_middle_name}} {{state.sos_last_name}} {{state.sos_suffix}}</span>
+</div>
+<div>
+	<span class='widelabel'>Address:</span> 
+	<span class='field'>
+	    {{state.sos_address}}, {{state.sos_city}}, {{state.sos_state}} {{state.sos_zip}}
+    </span>
+</div>
+<div>
+	<span class='widelabel'>Phone:</span>
+	<span class='field'>{{state.sos_phone}}</span>
+</div>
+<div>
+    <span class='widelabel'>Fax:</span
+    ><span class='field'>{{state.sos_fax}}</span>
+</div>
+<div>
+    <span class='widelabel'>Email:</span>
+    <span class='field'>{{state.sos_email}}</span>
+</div>
+<div>
+    <span class='widelabel'>Email:</span>
+    <span class='field'>{{state.sos_url}}</span>
+</div>
+
+<br/><br/>
+<h2>Election Vitals<a name="election_vitals"></a></h2>
+<br/>
+<div>
+    <span class='widelabel'>Governor:</span>
+    <span class='field'>{{state.governor}}</span>
+</div>
+<div>
+    <span class='widelabel'>Senator:</span>
+    <span class='field'>{{state.us_senate_1}}</span>
+</div>
+<div>
+    <span class='widelabel'>Senator:</span>
+    <span class='field'>{{state.us_senate_2}}</span>
+</div>
+
+
+<br/>
+<h2>Election Schedule<a name="election_schedule"></a></h2>
+<br/>
+{% for event in state.election_events %}
+<div>
+    <span class='widelabel'>{{event.description}}:</span>
+    <span class='field'>{{event.event_date|date:'F d, Y'}}</span>
+</div>
+{% endfor %}
+
+<br/>
+<h2>Past Presidential Elections<a name="past_pres_elections"></a></h2>
+<br/>
+{%for pres_election  in state.past_presidential_elections %}
+    {% for election_result in pres_election.results %}
+	<div>
+	    <span class='extrawidelabel'>Percentage of Votes For {{election_result.name}} in {{pres_election.year}}:</span>
+	    <span class='field'>{{election_result.percent|floatformat:1}}%</span>
+	</div>
+	{%endfor%}
+{% endfor %}
+<br/>
+<br/>
+
+<h2>Previous Election Results, other races<a name="past_elections"></a></h2>
+<br/>
+{% with state.past_non_presidential_elections as  past_elections %}
+    {% include "elections/past_elections.html" %}
+{% endwith %}
+
+<br/>
+<br/>
+<h2>Demographics<a name="demographics"></a></h2>
+<br/>
+
+{% with state as demo_obj %} 
+    {% include "elections/demographics.html" %}
+{% endwith %}
+{% endblock %}

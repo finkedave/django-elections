@@ -1,0 +1,21 @@
+{% load humanize %}
+<table width='50%'>
+    {% for past_election in past_elections %}
+        <tr class="election">
+            <td colspan="4">{{past_election.year}} {{past_election.get_office_display}} {{past_election.get_election_type_display}}</td></tr>
+            <tr class="head">
+            <td>Candidate</td>
+            <td>Party</td>
+            <td># Votes</td>
+            <td>% Votes</td>
+        </tr>
+        {% for election_result in past_election.results %}
+            <tr>
+                <td class="name">{{election_result.name}}</td>
+                <td class="party">{{election_result.party_displayable}}</td>
+                <td class="votes">{{election_result.vote|intcomma}}</td>
+                <td class="percent">{{election_result.percent|floatformat:1}}%</td>
+            </tr>
+        {% endfor %}
+    {% endfor %}
+</table>
