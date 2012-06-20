@@ -1,7 +1,7 @@
 from django.contrib import admin
 from .models import (Candidate, RaceCounty, RaceDistrict, CountyResult, 
                     DistrictResult, CandidateOffice, CandidateEducation, 
-                    CandidateOffice, CandidatePhone, CandidateURL, 
+                    CandidateOffice, CandidatePhone, CandidateURL, State, LiveMap,
                     ElectionEvent)
 from .settings import IMAGE_MODEL
 
@@ -65,7 +65,19 @@ class ElectionEventAdmin(admin.ModelAdmin):
     date_hierarchy = 'event_date'
     search_fields = ('state', 'description')
 
+class LiveMapAdmin(admin.ModelAdmin):
+    """ Live Map Admin """
+    list_display = ('state', 'race_date', 'race_type', 'party', 
+                    'update_results_start_date')
+    list_filter = ('state', 'race_date', 'party')
+    date_hierarchy = 'race_date'
 
+class StateAdmin(admin.ModelAdmin):
+    """ State Admin, We only want to show the required fields and fields
+    for live maps. We don't want one to change fields that are imported """
+    fields = ('state_id', 'postal', 'name', 'livemap_state_id', 'latitude', 
+              'longitude', 'livemap_state_zoom')
+    
 admin.site.register(RaceCounty)
 admin.site.register(RaceDistrict)
 admin.site.register(CountyResult)
@@ -75,3 +87,5 @@ admin.site.register(ElectionEvent, ElectionEventAdmin)
 admin.site.register(CandidateOffice)
 admin.site.register(CandidateEducation)
 admin.site.register(CandidatePhone)
+admin.site.register(State, StateAdmin)
+admin.site.register(LiveMap, LiveMapAdmin)

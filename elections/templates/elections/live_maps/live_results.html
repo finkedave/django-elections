@@ -1,0 +1,190 @@
+{% extends "site_base.html" %}
+
+{% load cache gdoubleclick menu_tags native pagination_tags position_tags image_size stories disqus_tags %}
+
+{% block pagetitle %}Campaign 2012 - Live {{state.name}} {{livemap.get_race_type_display}} Results &amp; Map{% endblock %}
+
+{% block pagedesc %}The Washington Times offers the latest {{state.name}} {{livemap.get_race_type_display}} Results for the 2012 Republican presidential campaign using data from the Associated Press and live maps.{% endblock %}
+
+{% block global_nav %}
+    {% render_menu main none mm_ campaign_2012 %}
+{% endblock %}
+
+{% block site_head %}
+    <script type="text/javascript" src="{{ STATIC_URL }}js/jquery.cookies.js"></script>
+    <script type="text/javascript" src="{{ STATIC_URL }}js/global.js"></script>
+    <script type="text/javascript">
+        var _gaq = _gaq || [];
+        _gaq.push(['_setAccount', 'UA-3328123-2']);
+        _gaq.push(['_setCustomVar', 1,'PageType', 'Flatpage', ]);
+        _gaq.push(['_setCustomVar', 2,'TopNode', 'campaign-2012', ]);
+        _gaq.push(['_setCustomVar', 4,'UserSegment', 'Registered', ]);
+        _gaq.push(['_addIgnoredOrganic', 'washington times']);
+        _gaq.push(['_addIgnoredOrganic', 'the washington times']);
+        _gaq.push(['_addIgnoredOrganic', 'washingtontimes']);
+        _gaq.push(['_addIgnoredOrganic', 'washingtontimes.com']);
+        _gaq.push(['_addIgnoredOrganic', 'www.washingtontimes.com']);
+        _gaq.push(['_addIgnoredOrganic', 'washington times newspaper']);
+        _gaq.push(['_addIgnoredOrganic', 'washington times news']);
+        _gaq.push(['_addIgnoredOrganic', 'wash times']);
+        _gaq.push(['_addIgnoredOrganic', 'washtimes']);
+        _gaq.push(['_addIgnoredOrganic', 'washtimes.com']);
+        _gaq.push(['_addIgnoredOrganic', 'washington time']);
+        _gaq.push(['_addIgnoredOrganic', 'washington times.com']);
+        _gaq.push(['_addIgnoredOrganic', 'washinton times']);
+        _gaq.push(['_addIgnoredOrganic', 'wahington times']);
+        _gaq.push(['_addIgnoredOrganic', 'the washington times newspaper']);
+        _gaq.push(['_trackPageview']);
+        _gaq.push(['_trackPageLoadTime']);
+        (function() {
+        var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+        ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+        (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(ga);
+        })();
+        
+        var sitepage;
+    </script>
+{% endblock %}
+
+{% block extra_head %}
+    <link rel="stylesheet" href="{{ STATIC_URL }}css/campaign2012.css" type="text/css" media="screen,print" />
+    <!--[if IE 7]><link rel="stylesheet" type="text/css" href="{{ STATIC_URL }}css/campaign2012-ie7.css" /><![endif]-->
+    <!--[if IE 9]><link rel="stylesheet" type="text/css" href="{{ STATIC_URL }}css/campaign2012-ie9.css" /><![endif]-->
+    <link href="http://fonts.googleapis.com/css?family=Merriweather" rel="stylesheet" type="text/css" />
+    <link rel="stylesheet" href="{{ STATIC_URL }}css/leaflet.css" />
+    <!--[if lte IE 8]><link rel="stylesheet" href="{{ STATIC_URL }}css/leaflet.ie.css" /><![endif]-->
+    <script src="{{ STATIC_URL }}js/leaflet.js"></script>
+    <script type="text/javascript" src="{{ STATIC_URL }}js/jquery.jcarousel.min.js"></script>
+    <script type="text/javascript">
+    $(document).ready(function(){
+        $('#stateselector').jcarousel({
+            start: 23,
+            scroll: 1
+        });
+    });
+    </script>
+    <link rel="stylesheet" href="{{ STATIC_URL }}css/tango-skin.css" type="text/css" charset="utf-8" />
+{% endblock %}
+
+{% block crumbs %}
+    <ul class="nav tertiary crumbs left">
+        <li class="noml"><a href="/">Home</a></li>
+        <li><a href="/campaign-2012/">Campaign 2012</a></li>
+        <li class="strong">Live Results: {{state.name}} {{livemap.get_race_type_display}} Map Results</li>
+    </ul>
+{% endblock %}
+
+{% block content_wrapper %}
+    <div class="content full">
+{% block content %}
+
+</div>
+</div>
+
+<div class="header-ctt"><a href="/campaign-2012/" title="Campaign 2012"><img src="{{ STATIC_URL }}images/2012/2012-master-header.jpg" alt="Campaign 2012" title="Campaign 2012" /></a></div>
+
+{% include "inc/2012_candidate_subnav.html" %}
+
+<div style="background: #fff;">
+    {% include "inc/2012_state_scroller.html" %}
+</div>
+<div class="ctt_main_top">
+    <div class="column c960 last" style="padding-left: 10px;">
+
+        <h1 style="font-family: Merriweather; font-weight: bold; font-size: 27px; padding-bottom: 20px; padding-top: 10px; color: #003766;">Live Results: {{state.name}} {{livemap.get_race_type_display}} Map Results <span style="font-size:25px;font-weight:normal;">| {{livemap.race_date|date:'F d, Y'}}</span></h1>
+
+        <div style="float:left;width:640px;">
+            <div id="map" style="width: 640px; height: 540px"></div>
+            <p><br />** For in-depth results, click a county above. If the state does not report results by county, we will only report total vote count and not map results.</p>  
+        </div>
+
+        <div style="float:right;width:302px;">
+            
+            <p><strong>At stake: {{livemap.delegate_count}} of 2,286 primary delegates.</strong></p>
+            
+            <h2 class="livetitle">Results</h2>
+            <div id="legend"></div>
+
+            <p><em>{{livemap.state_notice}}</em></p>
+            
+        </div>
+        <div style="clear:both;"></div>
+
+        <script>
+            function formatPopup(data) {
+                var max = 4,
+                    s = '<strong>' + data.name + ' County</strong><br />Precincts reporting ' + data.precincts_reporting_percent +'% ('+ data.precincts_reporting + '/'+data.precincts_total+')<br /><table style="border-collapse:collapse;"><tr><th></th><th></th><th></th><th><strong>Vote %</strong></th><th><strong>Votes</strong></th></tr>';
+                
+                if (data.results.length < 4) {
+                    max = data.results.length;
+                }
+                for(var i=0; i<max; i++){
+                    s += '<tr><td style="padding:2px 4px;margin-bottom:3px;"><img src="{{ STATIC_URL }}images/2012/candidate-map-' + data.results[i].ap_natl_number + '.jpg" /></td><td style="white-space:nowrap;padding:2px 4px;margin-bottom:3px;">' + data.results[i].name + '</td><td style="padding: 2px 4px;margin-bottom:3px;"><div style="width:12px;background-color:' + candidateColors[data.results[i].ap_pol_number] + '">&nbsp;</div></td><td style="padding:2px 4px;margin-bottom:3px;">' + data.results[i].vote_total_percent + '%</td><td style="text-align:left;padding:2px 4px;margin-bottom:3px;">' + data.results[i].vote_total + '</td></tr>';
+                }
+                s += "</table>";
+                return s;
+            }
+            var map = new L.Map('map');
+            var countyBnds = new L.GeoJSON();
+            var cloudmadeUrl = 'http://a.tiles.mapbox.com/v3/washtimes.twt-state-map/{z}/{x}/{y}.png',
+                cloudmadeAttribution = 'Map data &copy; 2012 AP / The Washington Times',
+                cloudmade = new L.TileLayer(cloudmadeUrl, {maxZoom: 8, attribution: cloudmadeAttribution});
+            map.setView(new L.LatLng({{state.latitude}},{{state.longitude}}), {{state.livemap_state_zoom}}).addLayer(cloudmade);
+            var countyWinners;
+            var candidateColors;
+            var countyResults;
+            $(document).ready(function(){
+                {% if livemap.race_complete %}
+                       json_file_url = '{{ STATIC_URL }}election_results/{{livemap.json_file_name}}'
+                {% else %}
+                       json_file_url = '/media/static/election_results/{{livemap.json_file_name}}'
+                {% endif %}
+                json_file_url = '/media/static/election_results/{{livemap.json_file_name}}'
+                $.getJSON(json_file_url, function(data){
+                    countyWinners = data.county_winners;
+                    candidateColors = data.candidate_colors;
+                    countyResults = data.county_results;
+                    // Set up the featureparse handler when we load the geometries
+                    countyBnds.on('featureparse', function(e){
+                        e.layer.setStyle({
+                            color: "#666",
+                            weight: 3,
+                            fillOpacity: 0.8,
+                            fillColor: candidateColors[countyWinners[e.properties.GEOID10]]
+                        });
+                        e.layer.bindPopup(formatPopup(countyResults[e.properties.GEOID10]));
+                    });
+                    $("#legend").html(data.legend);
+            
+                    setTimeout(function() {
+                        $.getJSON("/media/static/data/tl_2010_{{state.livemap_state_id}}_county10.geo.json", function(data){
+                            countyBnds.addGeoJSON(data);
+                            map.addLayer(countyBnds);
+                        });
+                    }, 1000);
+                });
+            });
+        </script>
+        
+        {% include "inc/2012_featured_stories.html" %}
+        
+        <link href="http://hosted.ap.org/specials/stylesheets/ap_elections.css" type="text/css" rel="stylesheet" />
+
+        <!--<h2 class="livetitle">Total Delegates</h2>
+
+        <script language="JavaScript" src="http://hosted.ap.org/elections/2012/by_race/US_FL_10673_D.js?SITE=DCTMSELN&SECTION=POLITICS"></script>-->
+
+    </div>
+    <div class="cb"></div>
+</div>
+
+<div class="shell">
+<div class="page">
+
+{% endblock %}
+        <div class="full left bt mt pb pt min mb adbar">
+            <div class="ad728x90 center">
+                {% get_ads bottom 728x90 %}{% get_ads top 1x1 script %}
+            </div>
+        </div>
+{% endblock %}

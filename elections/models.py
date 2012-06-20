@@ -1,7 +1,8 @@
+from datetime import datetime
 from django.db import models
 from django.db.models import get_model
 from django.core.files.storage import get_storage_class
-
+from django.utils.translation import ugettext as _
 from .settings import TEST_DATA_ONLY, IMAGE_MODEL, IMAGE_STORAGE
 from .fields import TestFlagField
 
@@ -755,6 +756,15 @@ class State(Demographics):
     sos_email = models.CharField(blank=True, null=True, max_length=50) 
     sos_url = models.CharField(blank=True, null=True, max_length=100) 
 
+    # These fields are for use for live maps and are non populated by
+    # from import
+    livemap_state_id = models.CharField(max_length=3, blank=True, null=True)
+    latitude = models.DecimalField(max_digits=8, decimal_places=5, 
+                                   blank=True, null=True)
+    longitude = models.DecimalField(max_digits=8, decimal_places=5, 
+                                    blank=True, null=True)
+    livemap_state_zoom = models.IntegerField(blank=True, null=True)
+    
     slug = models.SlugField()
     checksum = models.CharField(max_length=32)
 
@@ -802,6 +812,10 @@ class State(Demographics):
     
     def __unicode__(self):
         return self.name
+    
+    class Meta:
+        """ Meta method that sets ordering and unique together """
+        ordering = ['name',]
         
     def save(self, *args, **kwargs):
         """
@@ -1097,7 +1111,79 @@ class PastElectionResult(models.Model):
         if self.suffix:
             name_list.append(self.suffix)
         return " ".join(name_list) 
+
+class PublishedManager(models.Manager):
+    """ Manager for querying only published artwork entries """
+    def get_query_set(self):
+        """ A Published Live map is one whose results have started to come in
+        or completed """
+        queryset = super(PublishedManager, self).get_query_set()
+        return queryset.filter(
+            update_results_start_date__gte=datetime.now())
+
+RACE_TYPE_CHOICES = (('general', 'General Election'),
+                    ('primary', 'Primary'),
+                    ('caucus', 'Caucus'))
+
+PARTY_CHOICES = (('republican', 'Republican'),
+                 ('democrat', 'Democrat'))
+                                  
+class LiveMap(models.Model):
+    """ Model representing a live map """
+    state = models.ForeignKey(State)
+    race_type = models.CharField(max_length=20, choices=RACE_TYPE_CHOICES)
+    party =  models.CharField(max_length=20, choices=PARTY_CHOICES, blank=True, null=True)
+    race_date = models.DateField()
+    delegate_count = models.IntegerField(blank=True, null=True)
+    json_file_name = models.CharField(max_length=100)
+    state_notice = models.TextField(blank=True, null=True)
     
+    update_results_start_date = models.DateTimeField(
+        help_text=_("The date/time that AP will start receiving results for the state."))
+    update_results_end_date = models.DateTimeField(
+        help_text=_("The date/time that AP will stop receiving results for the state."))
+    
+    template_name = models.CharField(_('template name'), max_length=70, 
+                                     default='elections/live_maps/liveresults.html',
+        help_text=_("Example: 'elections/live_maps/2012_rep_primary_live_results.html'"))
+    
+    def __unicode__(self):
+        return self.title
+    
+    class Meta:
+        ordering = ['-race_date', 'race_type', 'party']
+        
+    def race_complete(self):
+        """ Race complete means that results are finished being updated """
+        return datetime.now() > self.update_results_end_date
+    
+    def is_published(self):
+        """ "published means that results have started coming in. Most of the
+        time we don't want maps being showed that have no results"""
+        return datetime.now() >= self.update_results_start_date
+    
+    @models.permalink
+    def get_absolute_url(self):
+        """ The url to see the live map """
+        if self.party:
+            return ('elections.views.live_map', 
+               [self.state.slug, self.race_type, self.party, 
+                    self.race_date.strftime('%Y-%m-%d')]
+            ) 
+        else:
+            return ('elections.views.live_map', 
+               [self.state.slug, self.race_type, self.race_date.strftime('%Y-%m-%d')]
+            ) 
+    
+    @property
+    def title(self):
+        """ The title of the live. This is used to specify for historical maps """
+        if self.party:
+            return "%s %s %s" %(self.race_date.year, self.get_party_display(), 
+                                self.get_race_type_display())
+        else:
+            return "%s %s" %(self.race_date.year, self.get_race_type_display())
+        
 def calculate_checksum(obj, mapping=None):
     """ Universal checksum for models that uses the IMPORT_MAPPING attribute
     to make sure that it matches the checksum that will be calculated for an
