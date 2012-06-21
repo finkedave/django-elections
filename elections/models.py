@@ -1112,14 +1112,6 @@ class PastElectionResult(models.Model):
             name_list.append(self.suffix)
         return " ".join(name_list) 
 
-class PublishedManager(models.Manager):
-    """ Manager for querying only published artwork entries """
-    def get_query_set(self):
-        """ A Published Live map is one whose results have started to come in
-        or completed """
-        queryset = super(PublishedManager, self).get_query_set()
-        return queryset.filter(
-            update_results_start_date__gte=datetime.now())
 
 RACE_TYPE_CHOICES = (('general', 'General Election'),
                     ('primary', 'Primary'),
@@ -1127,7 +1119,14 @@ RACE_TYPE_CHOICES = (('general', 'General Election'),
 
 PARTY_CHOICES = (('republican', 'Republican'),
                  ('democrat', 'Democrat'))
-                                  
+
+class PublishedManager(models.Manager):
+    """ Manager for querying only published artwork entries """
+    def get_query_set(self):
+        queryset = super(PublishedManager, self).get_query_set()
+        return queryset.filter(
+            update_results_start_date__lte=datetime.now())
+                   
 class LiveMap(models.Model):
     """ Model representing a live map """
     state = models.ForeignKey(State)
@@ -1146,6 +1145,9 @@ class LiveMap(models.Model):
     template_name = models.CharField(_('template name'), max_length=70, 
                                      default='elections/live_maps/liveresults.html',
         help_text=_("Example: 'elections/live_maps/2012_rep_primary_live_results.html'"))
+    
+    objects = models.Manager()
+    published = PublishedManager()
     
     def __unicode__(self):
         return self.title

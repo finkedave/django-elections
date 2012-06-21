@@ -9,7 +9,7 @@ from .models import (Candidate, RaceCounty, RaceDistrict, CountyResult,
                     DistrictResult, CandidateOffice, CandidateEducation, 
                     CandidateOffice, CandidatePhone, CandidateURL, 
                     ElectionEvent, PACContribution, State, District, LiveMap)
-
+import operator
 def state_detail(request, state):
     """
     Get a list of stuff for the state
@@ -30,6 +30,7 @@ def state_detail(request, state):
                 "all_offices": offices,
                 "state": offices[0].state_name,
                 "events": events,
+                'historical_year_live_map_list':create_historical_year_live_map_list(state)
             },
             context_instance=RequestContext(request))
     else:
@@ -100,25 +101,43 @@ def district_list(request, state):
         context_instance=RequestContext(request))
 
 def live_map(request, state, election_type, party=None, race_date=None):
-
-    base_live_map_qs = LiveMap.objects.filter(state__slug=state, party=party)
+    """ Get a live map by params"""
+    live_map_qs = LiveMap.objects.filter(state__slug=state, party=party)
 
     if race_date:
         race_date_obj = datetime.datetime.strptime(race_date, "%Y-%m-%d").date()
-        live_map_qs = base_live_map_qs.filter(race_date=race_date_obj)
-    else:
-        live_map_qs = base_live_map_qs
+        live_map_qs = live_map_qs.filter(race_date=race_date_obj)
+
     if not live_map_qs:
         raise Http404
     else:
         live_map = live_map_qs.latest('race_date')
-
-    historical_maps = base_live_map_qs.exclude(id=live_map.id)
+        
     return render_to_response(
                 live_map.template_name, 
                 {'livemap':live_map,
                  'state':live_map.state,
-                 'historical_maps':historical_maps
+                 'historical_year_live_map_list':create_historical_year_live_map_list(
+                                                                    state, live_map.id)
                 },
         context_instance=RequestContext(request))
+
+def create_historical_year_live_map_list(state, excluded_live_map_id=None):
+    """ Create historical list of races by year """
+    historical_map_qs = LiveMap.published.filter(state__slug=state)
+    if excluded_live_map_id:
+        historical_map_qs.exclude(id=excluded_live_map_id)
+
+    historical_year_live_map_dict = {}
+    historical_year_live_map_list = []
+    for historical_map in historical_map_qs:
+        if historical_map.race_date.year not in historical_year_live_map_dict:
+            historical_year_live_map_dict[historical_map.race_date.year] = []
+        historical_year_live_map_dict[historical_map.race_date.year].append(historical_map)
     
+    
+    if historical_year_live_map_dict:
+        historical_year_live_map_list = sorted(([year, live_map_list] \
+                        for year, live_map_list in historical_year_live_map_dict.iteritems()),
+                                               key = operator.itemgetter(0), reverse=True)
+    return historical_year_live_map_list
