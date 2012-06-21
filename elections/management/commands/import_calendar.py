@@ -12,6 +12,7 @@ class Command(LabelCommand):
     def handle_label(self, label, **options):
         import csv
         events = csv.reader(open(label, 'rb'), delimiter='|')
+        calendar_pk_list = []
         for row in events:
             row[3] = datetime.datetime.strptime(row[3], "%Y-%m-%d").date()
             checksum = hashlib.md5()
@@ -23,6 +24,7 @@ class Command(LabelCommand):
                     checksum.update('')
             try:
                 evt = ElectionEvent.objects.get(event_code=row[0])
+                calendar_pk_list.append(evt.pk)
                 if evt.checksum != checksum.hexdigest():
                     evt.state = row[1]
                     evt.state_name = row[2]
@@ -42,3 +44,7 @@ class Command(LabelCommand):
                     description = row[4]
                 )
                 evt.save()
+                calendar_pk_list.append(evt.pk)
+        removed_events = ElectionEvent.objects.exclude(pk__in=calendar_pk_list)
+        print "%d event(s) were not found in the import file. Deleting records" % removed_events.count()
+        removed_events.delete()

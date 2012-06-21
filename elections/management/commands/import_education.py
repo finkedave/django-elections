@@ -12,6 +12,7 @@ class Command(LabelCommand):
     def handle_label(self, label, **options):
         import csv
         bios = csv.reader(open(label, 'rb'), delimiter='|')
+        education_pk_list = []
         for row in bios:
             row[0] = int(row[0]) #politician id
             row[1] = row[1].replace('<p>', '').replace('</p>', '')
@@ -28,6 +29,7 @@ class Command(LabelCommand):
                 if created:
                     print "Had to create the candidate"
                 education = candidate.education.get(school_name=row[1], school_type=row[2], degree=row[4])
+                education_pk_list.append(education.pk)
                 if education.checksum != checksum.hexdigest():
                     education.school_name = row[1]
                     education.school_type = row[2]
@@ -54,3 +56,8 @@ class Command(LabelCommand):
                 education.school_province = row[7]
                 education.school_country = row[8]
                 education.save()
+                education_pk_list.append(education.pk)
+                
+        removed_educations = CandidateEducation.objects.exclude(pk__in=education_pk_list)
+        print "%d candidate education records  were not found in the import file. Deleting records" % removed_educations.count()
+        removed_educations.delete()

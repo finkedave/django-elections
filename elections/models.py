@@ -5,7 +5,7 @@ from django.core.files.storage import get_storage_class
 from django.utils.translation import ugettext as _
 from .settings import TEST_DATA_ONLY, IMAGE_MODEL, IMAGE_STORAGE
 from .fields import TestFlagField
-
+import hashlib
 STORAGE_MODEL = get_storage_class(IMAGE_STORAGE)
 
 class TestDataManager(models.Manager):
@@ -562,19 +562,19 @@ class PACContribution(models.Model):
     An individual campaign contributions of $2,000 or more made by a
     Political Action Committee.
     """
-    fec_record_number = models.CharField(primary_key=True, max_length=7)
+    fec_record_number = models.CharField(primary_key=True, max_length=20)
     fec_pac_id = models.CharField(max_length=11)
-    pac_name = models.CharField(blank=True, max_length=100)
-    recipient_committee = models.CharField(blank=True, max_length=100)
+    pac_name = models.CharField(blank=True, null=True, max_length=100)
+    recipient_committee = models.CharField(blank=True, null=True, max_length=100)
     candidate = models.ForeignKey(Candidate, related_name="pac_contributions", blank=True, null=True)
     office_id = models.CharField(blank=True, null=True, max_length=1)
     state = models.CharField(blank=True, null=True, max_length=2)
     district_number = models.IntegerField(blank=True, null=True)
     party_id = models.CharField(blank=True, null=True, max_length=16)
     fec_candidate_id = models.CharField(blank=True, null=True, max_length=10)
-    # LastName
-    # FirstName
-    # MiddleName
+    last_name = models.CharField(blank=True, null=True, max_length=50)
+    first_name = models.CharField(blank=True, null=True, max_length=50)
+    middle_name = models.CharField(blank=True, null=True, max_length=50)
     office = models.CharField(blank=True, null=True, max_length=64)
     state_name = models.CharField(blank=True, null=True, max_length=100)
     district_name = models.CharField(blank=True, null=True, max_length=32)
@@ -584,35 +584,32 @@ class PACContribution(models.Model):
     slug = models.SlugField()
     checksum = models.CharField(max_length=32)
     
+    """ Ordered mapping between the import file and the model """
+    IMPORT_MAPPING =  ['fec_record_number',
+                       'fec_pac_id',
+                       'pac_name',
+                       'recipient_committee',
+                       'candidate_id',
+                       'office_id',
+                       'state',
+                       'district_number',
+                       'party_id',
+                       'fec_candidate_id',
+                       'last_name',
+                       'first_name',
+                       'middle_name',
+                       'office',
+                       'state_name',
+                       'district_name',
+                       'party_name',
+                       'date_given',
+                       'amount']
+                    
     def calculate_checksum(self):
         """
         Calculate the MD5 checksum for the record
         """
-        import hashlib
-        checksum = hashlib.md5()
-        checksum.update(self.fec_record_number)
-        checksum.update(self.fec_pac_id)
-        checksum.update(self.pac_name or '')
-        checksum.update(self.recipient_committee or '')
-        if self.candidate:
-            checksum.update(str(self.candidate.pk))
-        else:
-            checksum.update('')
-        checksum.update(self.office_id or '')
-        checksum.update(self.state or '')
-        checksum.update(str(self.district_number) or '')
-        checksum.update(self.party_id or '')
-        checksum.update(self.fec_candidate_id or '')
-        checksum.update(self.office or '')
-        checksum.update(self.state_name or '')
-        checksum.update(self.district_name or '')
-        checksum.update(self.party_name or '')
-        if self.date_given:
-            checksum.update(self.date_given.isoformat())
-        else:
-            checksum.update('')
-        checksum.update(str(self.amount) or '')
-        return checksum.hexdigest()
+        return calculate_checksum(self)
     
     def save(self, *args, **kwargs):
         """
@@ -624,7 +621,20 @@ class PACContribution(models.Model):
             
             self.slug = slugify("%s %s" % (self.pac_name[:38], self.fec_pac_id))
         super(PACContribution, self).save(*args, **kwargs)
-
+        
+    def name(self):
+        """ Combines the name of the result field. First name last 
+        name and then suffix """
+        name_list = []
+        if self.first_name:
+            name_list.append(self.first_name)
+        if self.middle_name:
+            name_list.append(self.middle_name)
+        if self.last_name:
+            name_list.append(self.last_name)
+        return " ".join(name_list) 
+        
+        
     class Meta:
         ordering = ['-date_given',]
 
@@ -638,7 +648,10 @@ class PercentField(models.DecimalField):
     def __init__(self, verbose_name=None, name=None, max_digits=5, decimal_places=2, **kwargs):
         super(PercentField, self).__init__(verbose_name=None, name=None, 
                                              max_digits=5, decimal_places=2, **kwargs)
-    
+from south.modelsinspector import add_introspection_rules
+add_introspection_rules([], ["^elections\.models\.PercentField"])
+
+
 class Demographics(models.Model):
     """ Abstract class that both State and District extend from """
     population = models.IntegerField(blank=True, null=True)
@@ -1190,11 +1203,9 @@ def calculate_checksum(obj, mapping=None):
     """ Universal checksum for models that uses the IMPORT_MAPPING attribute
     to make sure that it matches the checksum that will be calculated for an
     imported file row """
-    import hashlib
-    checksum = hashlib.md5()
-    
     if not mapping:
         mapping = obj.IMPORT_MAPPING
+    checksum = hashlib.md5()
     for item in mapping:
         value = getattr(obj, item)
         if value:

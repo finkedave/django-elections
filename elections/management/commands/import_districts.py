@@ -2,7 +2,7 @@ import datetime
 
 from django.core.management.base import LabelCommand
 from elections.import_utils import populate_obj_w_import_data, create_checksum, \
-                                   normalize_data
+                                   normalize_data, create_date
 from elections.models import District
 
 class Command(LabelCommand):
@@ -17,7 +17,7 @@ class Command(LabelCommand):
             
             # turn the columns that re dates into dates
             if row[32]:
-                row[32] = datetime.datetime.strptime(row[32], "%Y-%m").date()
+                row[32] = create_date(row[32])
             checksum = create_checksum(row)
             try:
                 district = District.objects.get(district_id=row[0])

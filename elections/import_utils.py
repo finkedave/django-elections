@@ -1,4 +1,5 @@
 import hashlib
+from datetime import datetime
 
 def populate_obj_w_import_data(obj, import_data, mapping=None):
     """ Populate an object with import data is is mappied
@@ -35,3 +36,11 @@ def normalize_data(data_list):
         else:
             normalized_data.append(data)
     return normalized_data
+
+def create_date(date_string):
+    try:
+        date = datetime.strptime(date_string, "%Y-%m-%d").date()
+    except ValueError:
+        date = datetime.strptime(date_string, "%Y-%m").date()
+    return date
+        

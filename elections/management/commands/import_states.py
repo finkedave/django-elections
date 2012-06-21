@@ -4,7 +4,7 @@ from django.core.management.base import LabelCommand
 
 from elections.models import State, PresidentialElectionResult
 from elections.import_utils import populate_obj_w_import_data, \
-                                   create_checksum, normalize_data
+                                   create_checksum, normalize_data, create_date
 
 class Command(LabelCommand):
     args = '[file1 file2 ...]'
@@ -19,7 +19,7 @@ class Command(LabelCommand):
             
             # covert the date columns to actual dates
             if row[99]:
-                row[99] = datetime.datetime.strptime(row[99], "%Y-%m").date()
+                row[99] =create_date(row[99])
             
             
             state_columns = row[0:3]

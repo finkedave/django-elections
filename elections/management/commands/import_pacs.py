@@ -4,7 +4,8 @@ import hashlib
 
 from django.core.management.base import LabelCommand, CommandError
 from elections.models import Candidate, PACContribution
-
+from elections.import_utils import create_date, populate_obj_w_import_data, \
+                normalize_data, create_checksum
 class Command(LabelCommand):
     args = '[file1 file2 ...]'
     help = 'Imports PAC contributions'
@@ -12,73 +13,50 @@ class Command(LabelCommand):
     def handle_label(self, label, **options):
         import csv
         bios = csv.reader(open(label, 'rb'), delimiter='|')
+        fec_record_number_id_list = []
+        added_count = 0
+        skipped_count = 0
+        modified_count = 0
+        
         for row in bios:
-            row[4] = int(row[4]) #politician id
-            try:
-                row[7] = int(row[7])
-            except ValueError:
-                row[7] = None
-            row[17] = datetime.datetime.strptime(row[17], "%Y-%m-%d").date()
+            row[17] = create_date(row[17])
+
             try:
                 row[18] = int(row[18])
             except ValueError:
                 row[18] = 0
-            checksum = hashlib.md5()
+            row = normalize_data(row)
             
-            for i, item in enumerate(row[:-1]):
-                if i in (10, 11, 12):
-                    continue
-                elif i == 4 and item == 0:
-                    checksum.update('')
-                elif item:
-                    checksum.update(str(item))
-                else:
-                    checksum.update('')
+            fec_record_number_id_list.append(row[0])
             try:
-                try:
-                    candidate = Candidate.objects.get(politician_id=row[4])
-                except Candidate.DoesNotExist:
-                    candidate = None
-                
+                Candidate.objects.get(politician_id=row[4])
+            except Candidate.DoesNotExist:
+                # A 0 or something that doesn't a match a candiate should
+                # be considered None since thats how it will in the DB
+                row[4] = None
+            checksum = create_checksum(row)
+            
+            try:
                 contribution = PACContribution.objects.get(fec_record_number=row[0])
                 if contribution.checksum != checksum.hexdigest():
-                    contribution.fec_record_number = row[0]
-                    contribution.fec_pac_id = row[1]
-                    contribution.pac_name = row[2]
-                    contribution.recipient_committee = row[3]
-                    contribution.candidate = candidate
-                    contribution.office_id = row[5]
-                    contribution.state = row[6]
-                    contribution.district_number = row[7]
-                    contribution.party_id = row[8]
-                    contribution.fec_candidate_id = row[9]
-                    contribution.office = row[13]
-                    contribution.state_name = row[14]
-                    contribution.district_name = row[15]
-                    contribution.party_name = row[16]
-                    contribution.date_given = row[17]
-                    contribution.amount = row[18]
-                    print 'Updating %s' % row[0]
+                    populate_obj_w_import_data(contribution, row)
+                   
+                    modified_count += 1
                     contribution.save()
                 else:
-                    print "Skipping %s. No change." % row[0]
+                    skipped_count += 1
             except PACContribution.DoesNotExist:
-                print 'Adding %s' % row[0]
+                added_count += 1
                 contribution = PACContribution()
-                contribution.fec_record_number = row[0]
-                contribution.fec_pac_id = row[1]
-                contribution.pac_name = row[2]
-                contribution.recipient_committee = row[3]
-                contribution.candidate = candidate
-                contribution.office_id = row[5]
-                contribution.state = row[6]
-                contribution.district_number = row[7]
-                contribution.party_id = row[8]
-                contribution.fec_candidate_id = row[9]
-                contribution.office = row[13]
-                contribution.state_name = row[14]
-                contribution.district_name = row[15]
-                contribution.party_name = row[16]
-                contribution.date_given = row[17]
-                contribution.amount = row[18]
+                populate_obj_w_import_data(contribution, row)
                 contribution.save()
+        # For all candiates that were missing in the files mark as inactive
+        removed_pacs = PACContribution.objects.exclude(fec_record_number__in=fec_record_number_id_list)
+        removed_count = removed_pacs.count()
+        removed_pacs.delete()
+        print "Summary"
+        print 'Added %d past election results.' % added_count
+        print "Modified %d past election results." % modified_count
+        print 'Skipped %d past election results. No changes found' % skipped_count
+        if removed_count:
+            print "%d PAC(s) were not found in the import file. Removing these PACS" % removed_count

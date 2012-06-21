@@ -12,9 +12,13 @@ class Command(LabelCommand):
     def handle_label(self, label, **options):
         import csv
         bios = csv.reader(open(label, 'rb'), delimiter='|')
+        office_pk_list = []
         for row in bios:
             row[0] = int(row[0]) #politician id
-            row[12] = int(row[12])
+            try:
+                row[12] = int(row[12])
+            except ValueError:
+                row[12] = None
             checksum = hashlib.md5()
             
             for item in row[:-1]:
@@ -27,6 +31,7 @@ class Command(LabelCommand):
                 if created:
                     print "Had to create the candidate"
                 office = candidate.offices.get(office_id=row[1], state=row[2], district_number=row[3])
+                office_pk_list.append(office.pk)
                 if office.checksum != checksum.hexdigest():
                     office.office_id = row[1]
                     office.state = row[2]
@@ -61,3 +66,8 @@ class Command(LabelCommand):
                 office.status_description = row[11]
                 office.next_election = row[12]
                 office.save()
+                office_pk_list.append(office.pk)
+                
+        removed_offices = CandidateOffice.objects.exclude(pk__in=office_pk_list)
+        print "%d offices were not found in the import file. Deleting records" % removed_offices.count()
+        removed_offices.delete()

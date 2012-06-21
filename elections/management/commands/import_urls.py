@@ -12,6 +12,7 @@ class Command(LabelCommand):
     def handle_label(self, label, **options):
         import csv
         bios = csv.reader(open(label, 'rb'), delimiter='|')
+        url_pk_list = []
         for row in bios:
             row[0] = int(row[0]) #politician id
             checksum = hashlib.md5()
@@ -26,6 +27,7 @@ class Command(LabelCommand):
                 if created:
                     print "Had to create the candidate"
                 url = candidate.urls.get(url=row[1], description=row[2])
+                url_pk_list.append(url.pk)
                 if url.checksum != checksum.hexdigest():
                     url.url = row[1]
                     url.description = row[2]
@@ -40,3 +42,7 @@ class Command(LabelCommand):
                 url.url = row[1]
                 url.description = row[2]
                 url.save()
+                url_pk_list.append(url.pk)
+        removed_urls = CandidateURL.objects.exclude(pk__in=url_pk_list)
+        print "%d urls were not found in the import file. Deleting records" % removed_urls.count()
+        removed_urls.delete()

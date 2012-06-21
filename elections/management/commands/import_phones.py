@@ -12,6 +12,7 @@ class Command(LabelCommand):
     def handle_label(self, label, **options):
         import csv
         bios = csv.reader(open(label, 'rb'), delimiter='|')
+        phone_pk_list = []
         for row in bios:
             row[0] = int(row[0]) #politician id
             checksum = hashlib.md5()
@@ -26,6 +27,7 @@ class Command(LabelCommand):
                 if created:
                     print "Had to create the candidate"
                 phone = candidate.phones.get(phone_number=row[1], extension=row[2], detail=row[4])
+                phone_pk_list.append(phone.pk)
                 if phone.checksum != checksum.hexdigest():
                     phone.phone_number = row[1]
                     phone.extension = row[2]
@@ -44,3 +46,7 @@ class Command(LabelCommand):
                 phone.location = row[3]
                 phone.detail = row[4]
                 phone.save()
+                phone_pk_list.append(phone.pk)
+        removed_phones = CandidatePhone.objects.exclude(pk__in=phone_pk_list)
+        print "%d phone numbers were not found in the import file. Deleting records" % removed_phones.count()
+        removed_phones.delete()
