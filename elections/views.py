@@ -124,10 +124,11 @@ def live_map(request, state, election_type, party=None, race_date=None):
 
 def create_historical_year_live_map_list(state, excluded_live_map_id=None):
     """ Create historical list of races by year """
+    
     historical_map_qs = LiveMap.published.filter(state__slug=state)
     if excluded_live_map_id:
-        historical_map_qs.exclude(id=excluded_live_map_id)
-
+        historical_map_qs = historical_map_qs.exclude(id=excluded_live_map_id)
+    
     historical_year_live_map_dict = {}
     historical_year_live_map_list = []
     for historical_map in historical_map_qs:
