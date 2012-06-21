@@ -1,6 +1,7 @@
 # n.races[0].reporting_units[0].results
 from elections.ap import AP
 from elections.settings import FTP_USER, FTP_PASSWORD, MAP_RESULTS_DEST
+from dateutil.parser import parse as dateparse
 import os
 try:
     import json
@@ -91,12 +92,17 @@ def write_results(electiondate):
     client = AP(FTP_USER, FTP_PASSWORD)
     n = client.get_topofticket(electiondate)
     
+    dt = dateparse(electiondate)
+    directory = os.path.join(MAP_RESULTS_DEST, str(dt.year))
     
+    if not os.path.exists(directory):
+        os.makedirs(directory)
+
     # Detail county results
     for race in n.races:
         party = race.party
         state = race.state.abbrev
         results = parse_race(race)
-        f = open(os.path.join(MAP_RESULTS_DEST, "%s-%s-%s.json" % (electiondate, party, state)), "w")
+        f = open(os.path.join(directory, "%s-%s-%s.json" % (electiondate, party, state)), "w")
         f.write(json.dumps(results))
         f.close()
