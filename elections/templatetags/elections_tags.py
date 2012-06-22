@@ -53,23 +53,43 @@ def do_get_pac_contribution_candidate_list(parser, token):
     """
     Get the top candidates who have received the most money from pacs
     """
+    proper_form = "{% get_pac_contribution_candidate_list count [party_id] as var %}"
+
     try:
-        tag_name, count, as_txt, var = token.split_contents()
+        bits = token.split_contents()
+        count = bits[1]
+        if len(bits) == 5:
+            party = bits[2]
+            var = bits[4]
+        elif len(bits) == 4:
+            var = bits[3]
+            party = None
+        else:
+            raise template.TemplateSyntaxError("%s tag shoud be in the form: %s" % (bits[0], proper_form))
+
     except ValueError:
-        raise template.TemplateSyntaxError(
-                "'get_pac_contribution_candidate_list' requires a count, and a variable name.")
-    return PacContributionCandidateListNode(count, var)
+        raise template.TemplateSyntaxError("%s tag shoud be in the form: %s" % (bits[0], proper_form))
+    return PacContributionCandidateListNode(count, party, var)
 
 
 class PacContributionCandidateListNode(template.Node):
     """ Node that creates the list and sets it in context"""
-    def __init__(self, count, var_name):
+    def __init__(self, count, party, var_name):
         self.count = Variable(count)
+        if party:
+            self.party = Variable(party)
+        else:
+            self.party = None
         self.var_name = var_name
         
     def render(self, context):
         count = resolve(self.count, context)
-        top_pac_contribution_cadidate_list = PACContribution.objects.exclude(
+        if self.party:
+            pac_qs = PACContribution.objects.filter(party_id=resolve(self.party, context))
+        else:
+            pac_qs = PACContribution.objects 
+            
+        top_pac_contribution_cadidate_list = pac_qs.exclude(
                                 candidate=None).values('candidate').annotate(
                                 total_amount=Sum('amount')).order_by('-total_amount')
         
@@ -85,5 +105,31 @@ class PacContributionCandidateListNode(template.Node):
             candidate.total_contribution = pac_contribution_cadidate['total_amount']
             candidate_list.append(candidate)
         context[self.var_name] = candidate_list
+        
+        return ''
+    
+
+@register.tag('get_presidential_candidate_list')
+def do_get_presidential_candidate_list(parser, token):
+    """
+    Gets all the candidates that are have is_presidential_candidate set to True
+    """
+    try:
+        tag_name, as_txt, var = token.split_contents()
+    except ValueError:
+        raise template.TemplateSyntaxError("'get_pac_contribution_list' requires an 'as variable name'.")
+    return PresidentialCandiateListNode(var)
+
+
+class PresidentialCandiateListNode(template.Node):
+    """
+    Node that creates the presidential candidate list
+    """
+    def __init__(self, var_name):
+        self.var_name = var_name
+        
+    def render(self, context):
+        presidential_candidate_list = Candidate.objects.filter(is_presidential_candidate=True)
+        context[self.var_name] = presidential_candidate_list
         
         return ''

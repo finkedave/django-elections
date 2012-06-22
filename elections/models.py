@@ -6,6 +6,7 @@ from django.utils.translation import ugettext as _
 from .settings import TEST_DATA_ONLY, IMAGE_MODEL, IMAGE_STORAGE
 from .fields import TestFlagField
 import hashlib
+from django.db.models import Sum
 STORAGE_MODEL = get_storage_class(IMAGE_STORAGE)
 
 class TestDataManager(models.Manager):
@@ -123,6 +124,11 @@ class Candidate(models.Model):
             
             self.slug = slugify("%s %s" % (self.full_name.replace(",", ""), self.politician_id))
         super(Candidate, self).save(*args, **kwargs)
+    
+    def pac_contribution_total_amount(self):
+        """ Returns the total amount that has been contributed to a candidate from pacs"""
+        return self.pac_contributions.aggregate(total_amount=Sum('amount'))['total_amount']
+    
     
     objects = TestDataManager()
     
