@@ -39,7 +39,8 @@ class CandidateAdmin(admin.ModelAdmin):
     
     fieldsets = (
         (None, {
-            'fields': (('first_name', 'middle_name', 'last_name', 'junior'), ('residence_place', 'residence_state'),),
+            'fields': (('first_name', 'middle_name', 'last_name', 'junior'), 
+                       ('residence_place', 'residence_state'),'is_presidential_candidate'),
         }),
         ('Demographics', {
             'fields': ('gender', ('ethnicity', 'hispanic'), 'religion',)
@@ -71,7 +72,8 @@ class LiveMapAdmin(admin.ModelAdmin):
                     'update_results_start_date')
     list_filter = ('state', 'race_date', 'party')
     date_hierarchy = 'race_date'
-
+    prepopulated_fields = {"slug": ('race_date', 'party', 'state')}
+    
 class StateAdmin(admin.ModelAdmin):
     """ State Admin, We only want to show the required fields and fields
     for live maps. We don't want one to change fields that are imported """

@@ -100,19 +100,16 @@ def district_list(request, state):
         },
         context_instance=RequestContext(request))
 
-def live_map(request, state, election_type, party=None, race_date=None):
+def live_map(request, state, slug=None):
     """ Get a live map by params"""
-    live_map_qs = LiveMap.objects.filter(state__slug=state, party=party)
-
-    if race_date:
-        race_date_obj = datetime.datetime.strptime(race_date, "%Y-%m-%d").date()
-        live_map_qs = live_map_qs.filter(race_date=race_date_obj)
-
+    live_map_qs = LiveMap.objects.filter(state__slug=state)
+    if slug:
+        live_map_qs = live_map_qs.filter(slug=slug)
+    
     if not live_map_qs:
         raise Http404
     else:
         live_map = live_map_qs.latest('race_date')
-        
     return render_to_response(
                 live_map.template_name, 
                 {'livemap':live_map,

@@ -8,6 +8,9 @@ class Migration(SchemaMigration):
 
     def forwards(self, orm):
         
+        # Adding field 'Candidate.is_presidential_candidate'
+        db.add_column('elections_candidate', 'is_presidential_candidate', self.gf('django.db.models.fields.BooleanField')(default=False), keep_default=False)
+
         # Adding field 'PACContribution.last_name'
         db.add_column('elections_paccontribution', 'last_name', self.gf('django.db.models.fields.CharField')(max_length=50, null=True, blank=True), keep_default=False)
 
@@ -29,6 +32,9 @@ class Migration(SchemaMigration):
 
     def backwards(self, orm):
         
+        # Deleting field 'Candidate.is_presidential_candidate'
+        db.delete_column('elections_candidate', 'is_presidential_candidate')
+
         # Deleting field 'PACContribution.last_name'
         db.delete_column('elections_paccontribution', 'last_name')
 
@@ -64,6 +70,7 @@ class Migration(SchemaMigration):
             'first_name': ('django.db.models.fields.CharField', [], {'max_length': '64', 'null': 'True', 'blank': 'True'}),
             'gender': ('django.db.models.fields.CharField', [], {'max_length': '1', 'null': 'True', 'blank': 'True'}),
             'hispanic': ('django.db.models.fields.CharField', [], {'max_length': '100', 'null': 'True', 'blank': 'True'}),
+            'is_presidential_candidate': ('django.db.models.fields.BooleanField', [], {'default': 'False'}),
             'junior': ('django.db.models.fields.CharField', [], {'max_length': '16', 'null': 'True', 'blank': 'True'}),
             'last_name': ('django.db.models.fields.CharField', [], {'max_length': '64', 'null': 'True', 'blank': 'True'}),
             'middle_name': ('django.db.models.fields.CharField', [], {'max_length': '64', 'null': 'True', 'blank': 'True'}),
@@ -249,6 +256,7 @@ class Migration(SchemaMigration):
             'party': ('django.db.models.fields.CharField', [], {'max_length': '20', 'null': 'True', 'blank': 'True'}),
             'race_date': ('django.db.models.fields.DateField', [], {}),
             'race_type': ('django.db.models.fields.CharField', [], {'max_length': '20'}),
+            'slug': ('django.db.models.fields.SlugField', [], {'max_length': '50', 'db_index': 'True'}),
             'state': ('django.db.models.fields.related.ForeignKey', [], {'to': "orm['elections.State']"}),
             'state_notice': ('django.db.models.fields.TextField', [], {'null': 'True', 'blank': 'True'}),
             'template_name': ('django.db.models.fields.CharField', [], {'default': "'elections/live_maps/liveresults.html'", 'max_length': '70'}),

@@ -92,7 +92,7 @@ class Candidate(models.Model):
         null=True)
     thumbnail_width = models.IntegerField(blank=True, null=True)
     thumbnail_height = models.IntegerField(blank=True, null=True)
-
+    is_presidential_candidate = models.BooleanField(default=False)
     @property
     def full_name(self):
         names =[]
@@ -1158,7 +1158,7 @@ class LiveMap(models.Model):
     template_name = models.CharField(_('template name'), max_length=70, 
                                      default='elections/live_maps/liveresults.html',
         help_text=_("Example: 'elections/live_maps/2012_rep_primary_live_results.html'"))
-    
+    slug = models.SlugField()
     objects = models.Manager()
     published = PublishedManager()
     
@@ -1167,6 +1167,17 @@ class LiveMap(models.Model):
     
     class Meta:
         ordering = ['-race_date', 'race_type', 'party']
+    
+    def save(self, *args, **kwargs):
+        """
+        Make sure the slug is created when imported
+        """
+        if not self.slug:
+            from django.template.defaultfilters import slugify
+            
+            self.slug = slugify("%s %s %s" % (self.race_date, 
+                                self.party, self.state.postal))
+        super(LiveMap, self).save(*args, **kwargs)
         
     def race_complete(self):
         """ Race complete means that results are finished being updated """
@@ -1179,16 +1190,11 @@ class LiveMap(models.Model):
     
     @models.permalink
     def get_absolute_url(self):
-        """ The url to see the live map """
-        if self.party:
-            return ('elections.views.live_map', 
-               [self.state.slug, self.race_type, self.party, 
-                    self.race_date.strftime('%Y-%m-%d')]
-            ) 
-        else:
-            return ('elections.views.live_map', 
-               [self.state.slug, self.race_type, self.race_date.strftime('%Y-%m-%d')]
-            ) 
+        """
+        Get the absolute url for the candidate
+        """
+        return ('elections.views.live_map', (), {'state':self.state.postal, 'slug': self.slug })
+
     
     @property
     def title(self):

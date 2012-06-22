@@ -443,6 +443,7 @@ class Migration(SchemaMigration):
             ('update_results_start_date', self.gf('django.db.models.fields.DateTimeField')()),
             ('update_results_end_date', self.gf('django.db.models.fields.DateTimeField')()),
             ('template_name', self.gf('django.db.models.fields.CharField')(default='elections/live_maps/liveresults.html', max_length=70)),
+            ('slug', self.gf('django.db.models.fields.SlugField')(max_length=50, db_index=True)),
         ))
         db.send_create_signal('elections', ['LiveMap'])
 
@@ -714,6 +715,7 @@ class Migration(SchemaMigration):
             'party': ('django.db.models.fields.CharField', [], {'max_length': '20', 'null': 'True', 'blank': 'True'}),
             'race_date': ('django.db.models.fields.DateField', [], {}),
             'race_type': ('django.db.models.fields.CharField', [], {'max_length': '20'}),
+            'slug': ('django.db.models.fields.SlugField', [], {'max_length': '50', 'db_index': 'True'}),
             'state': ('django.db.models.fields.related.ForeignKey', [], {'to': "orm['elections.State']"}),
             'state_notice': ('django.db.models.fields.TextField', [], {'null': 'True', 'blank': 'True'}),
             'template_name': ('django.db.models.fields.CharField', [], {'default': "'elections/live_maps/liveresults.html'", 'max_length': '70'}),

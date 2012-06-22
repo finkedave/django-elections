@@ -35,11 +35,9 @@ urlpatterns += patterns('',
     url(r'^(?P<state>[a-zA-Z0-9_-]+)/districts/(?P<district>[a-zA-Z0-9_-]+)/profile/$', 'elections.views.district_profile', name='district_profile'),
     url(r'^(?P<state>[A-Z][A-Z])/districts/$', 'elections.views.district_list', name="district_list"),
     
-    url(r'^(?P<state>[A-Z][A-Z])/live_map/(?P<election_type>general|primary|caucus)/(?P<party>republican|democrat)/(?P<race_date>\d{4}-\d{2}-\d{2})/$', 'elections.views.live_map'),
-
-    url(r'^(?P<state>[A-Z][A-Z])/live_map/(?P<election_type>general|primary|caucus)/(?P<party>republican|democrat)/$', 'elections.views.live_map'),
-    url(r'^(?P<state>[A-Z][A-Z])/live_map/(?P<election_type>general|primary|caucus)/(?P<race_date>\d{4}-\d{2}-\d{2})/$', 'elections.views.live_map'),
-    url(r'^(?P<state>[A-Z][A-Z])/live_map/(?P<election_type>general|primary|caucus)/$', 'elections.views.live_map'),
+    url(r'^(?P<state>[A-Z][A-Z])/live-map/(?P<slug>[a-zA-Z0-9_-]+)/$', 'elections.views.live_map'),
+    url(r'^(?P<state>[A-Z][A-Z])/live-map/$', 'elections.views.live_map'),
+       
     url(r'^(?P<state>[A-Z][A-Z])/$', 'elections.views.state_detail', name="state_election_details"),
     url(r'^(?P<state>\w\w)/$', 'elections.views.lc_state_redirect', name="lc_state_redirect"),
     url(r'^pacs/(?P<slug>[a-zA-Z0-9_-]+)/$', 'elections.views.pac_detail', name='pac_detail'),
