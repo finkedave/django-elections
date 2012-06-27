@@ -5,6 +5,7 @@ from django.template import Variable, VariableDoesNotExist
 register = template.Library()
 
 from elections.models import PACContribution, Candidate
+from elections import to_bool
 
 def resolve(var, context):
     try:
@@ -147,13 +148,11 @@ class PresidentialCandiateListNode(template.Node):
             self.is_active = Variable(is_active)
         else:
             self.is_active = None
-        print party
         if party:
             self.party = Variable(party)
         else:
             self.party = None
-        print self.party
-        
+
     def render(self, context):
         presidential_candidate_qs = Candidate.objects.filter(is_presidential_candidate=True)
         if self.is_active:
@@ -170,13 +169,3 @@ class PresidentialCandiateListNode(template.Node):
         context[self.var_name] = presidential_candidate_qs.distinct('politician_id')
         
         return ''
-
-def to_bool(value):
-    """
-       Converts 'something' to boolean. Raises exception for invalid formats
-           Possible True  values: 1, True, "1", "TRue", "yes", "y", "t"
-           Possible False values: 0, False, None, [], {}, "", "0", "faLse", "no", "n", "f", 0.0, ...
-    """
-    if str(value).lower() in ("yes", "y", "true",  "t", "1", 'True'): return True
-    if str(value).lower() in ("no",  "n", "false", "f", "0", "0.0", "", "none", "[]", "{}", 'False'): return False
-    raise Exception('Invalid value for boolean conversion: ' + str(value))
