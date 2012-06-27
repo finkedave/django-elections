@@ -4,12 +4,13 @@ from django.http import HttpResponseRedirect, HttpResponseForbidden, Http404
 from django.template import RequestContext
 from django.utils.translation import ugettext, ugettext_lazy as _
 from django.shortcuts import get_object_or_404
+from django.db.models import Q 
 import datetime
 from .models import (Candidate, RaceCounty, RaceDistrict, CountyResult, 
                     DistrictResult, CandidateOffice, CandidateEducation, 
                     CandidateOffice, CandidatePhone, CandidateURL, 
                     ElectionEvent, PACContribution, State, District, LiveMap,
-                    DelegateElection)
+                    DelegateElection, EVENT_PRESIDENTIAL_KEYWORD_LIST)
 import operator
 def state_detail(request, state):
     """
@@ -181,3 +182,21 @@ def create_historical_delegate_election_list(excluded_id):
                         for year, delegate_election_list in historical_year_delegate_election_dict.iteritems()),
                                                key = operator.itemgetter(0), reverse=True)
     return historical_year_delegate_election_list
+
+
+def calendar(request):
+    """ Render a list of calendar events """
+    level_type = request.GET.get('level_type', 'presidential')
+    event_qs = ElectionEvent.objects.all()
+    if level_type:
+        presidential_q = reduce(operator.or_, (Q(description__icontains=x) for x in EVENT_PRESIDENTIAL_KEYWORD_LIST))
+        if level_type=='presidential':
+            event_qs = event_qs.filter(presidential_q)
+        else:
+            event_qs = event_qs.filter(~presidential_q|Q(description__icontains='state'))
+    return render_to_response(
+                'elections/calendar.html', 
+                {'events':event_qs,
+                 'level_type':level_type
+                },
+        context_instance=RequestContext(request))

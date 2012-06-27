@@ -544,6 +544,8 @@ class CandidateMoney(models.Model):
     def __unicode__(self):
         return u"CandidateMoney"
 
+EVENT_PRESIDENTIAL_KEYWORD_LIST = ['president', 'caucuses', 'persidential', 
+                            'national', 'general election', 'closed primary']
 class ElectionEvent(models.Model):
     """An event that is going to happen in an election"""
     event_code = models.CharField(primary_key=True, max_length=20)
@@ -573,8 +575,56 @@ class ElectionEvent(models.Model):
         self.checksum = self.calculate_checksum()
         super(ElectionEvent, self).save(*args, **kwargs)
     
+    @property
+    def race_type(self):
+        description_lower = self.description.lower()
+        
+        # Note the Prmary. Ap doesn't know how to validate data very well
+        if description_lower.count('primary') or description_lower.count('prmary'):
+            return 'primary'
+        elif description_lower.count('caucuses'):
+            return 'caucus'
+        elif description_lower.count('general election'):
+            return 'general'
+        else:
+            return self.description
+    
+
+    
+    @property
+    def level(self):
+        description_lower = self.description.lower()
+        is_presidential = False
+        for keyword in EVENT_PRESIDENTIAL_KEYWORD_LIST:
+            if description_lower.count(keyword):
+                is_presidential = True
+                break
+            
+        if is_presidential:
+            if description_lower.count('state'):
+                return 'Presidential/State'
+            else:
+                return 'Presidential'
+        else:
+            return 'State'
+        
+    @property
+    def party(self):
+        description_lower = self.description.lower()
+        if description_lower.count('republican'):
+            return 'republican'
+        elif description_lower.count('democrat'):
+            return 'democrat'
+        elif self.level != 'State':
+            return 'both'
+        else:
+            return ''
+    
+    def live_results(self):
+        return LiveMap.objects.filter(state=self.state, race_date=self.event_date, race_type=self.race_type)
+    
     class Meta:
-        ordering = ['event_date',]
+        ordering = ['event_date', 'state_name']
 
     def __unicode__(self):
         return u" ".join([self.state, self.event_date.isoformat(), self.description])

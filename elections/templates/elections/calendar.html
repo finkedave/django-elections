@@ -1,0 +1,66 @@
+{% extends "elections/base.html" %}
+{% block content %}
+Level Type:
+<select onchange="window.location.href = '?level_type='+this.value">
+    <option value=''/>All</option>
+    <option value='presidential' {%ifequal level_type 'presidential'%}selected{%endifequal%}/>Presidential</option>
+    <option value='state' {%ifequal level_type 'state'%}selected{%endifequal%}/>State</option>
+</select>
+<table>
+    <tr>
+        <th>Date</th>
+        <th>State</th>
+        <th>Results</th>
+        <th>Delegates</th>
+        <th>Type</th>
+        <th>Level</th>
+        <th>Party</th>
+    </tr>
+    {% for event in events %}
+    <tr>
+        {% with event.live_results as live_results %} 
+	        <td>
+	        {% ifchanged event.event_date %}
+	            {{event.event_date|date:'F d, Y'}}
+	        {% else %}
+	            &nbsp;
+	        {% endifchanged %}    
+	        </td>
+	        <td>{{event.state_name}}</td>
+	        <td>
+	           {% if live_results %}
+	               {% if live_results|length > 1 %}
+	                   {% for live_result in live_results %}
+	                       <a href='{{live_result.get_absolute_url}}'>{{live_result.get_party_display}}</a>
+	                   {% endfor %}
+	               {%else %}
+	                   <a href='{{live_results.0.get_absolute_url}}'>Results</a>
+	               {% endif %}
+	           {% else %}
+	               &nbsp;
+	           {% endif %}
+	        </td>
+	        <td>
+	           {% if live_results %}
+                   {% if live_results|length > 1 %}
+                       {% for live_result in live_results %}
+                           {{live_result.get_party_display.0}}-{{live_result.delegate_count}};
+                       {% endfor %}
+                   {%else %}
+                       {{live_results.0.delegate_count}}
+                   {% endif %}
+               {% else %}
+                   &nbsp;
+               {% endif %}
+	        
+	        </td>
+	        <td>{{event.race_type|title}}</td>
+	        <td>{{event.level|title}}</td>
+	        <td>{{event.party|title}}</td>
+	   {% endwith %}
+    {% endfor %}
+   <tr>
+
+</table>
+
+{% endblock %}

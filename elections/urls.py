@@ -43,5 +43,8 @@ urlpatterns += patterns('',
     url(r'^pacs/(?P<slug>[a-zA-Z0-9_-]+)/$', 'elections.views.pac_detail', name='pac_detail'),
     url(r'^delegate-tracker/(?P<category>[a-zA-Z0-9_-]+)/(?P<slug>[a-zA-Z0-9_-]+)/$', 'elections.views.delegate_tracker'),
     url(r'^delegate-tracker/(?P<category>[a-zA-Z0-9_-]+)/$', 'elections.views.delegate_tracker'),
+    url(r'^calendar/$', 'elections.views.calendar'),
+    
+    
         
 )
