@@ -41,5 +41,7 @@ urlpatterns += patterns('',
     url(r'^(?P<state>[A-Z][A-Z])/$', 'elections.views.state_detail', name="state_election_details"),
     url(r'^(?P<state>\w\w)/$', 'elections.views.lc_state_redirect', name="lc_state_redirect"),
     url(r'^pacs/(?P<slug>[a-zA-Z0-9_-]+)/$', 'elections.views.pac_detail', name='pac_detail'),
-    
+    url(r'^delegate-tracker/(?P<category>[a-zA-Z0-9_-]+)/(?P<slug>[a-zA-Z0-9_-]+)/$', 'elections.views.delegate_tracker'),
+    url(r'^delegate-tracker/(?P<category>[a-zA-Z0-9_-]+)/$', 'elections.views.delegate_tracker'),
+        
 )

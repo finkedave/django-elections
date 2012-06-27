@@ -6,7 +6,7 @@ from .models import (Candidate, RaceCounty, RaceDistrict, CountyResult,
 from .settings import IMAGE_MODEL
 
 if IMAGE_MODEL:
-    IMAGE_FIELDS = ('photo_fk', 'photo', 'thumbnail_fk', 'thumbnail')
+    IMAGE_FIELDS = ('photo', 'photo_fk', 'thumbnail', 'thumbnail_fk')
 else:
     IMAGE_FIELDS = ('photo', 'thumbnail')
 
@@ -36,11 +36,12 @@ class CandidateAdmin(admin.ModelAdmin):
     list_filter = ('gender', 'religion', 'ethnicity',)
     search_fields = ('last_name', 'first_name')
     prepopulated_fields = {"slug": ('first_name', 'middle_name', 'last_name', 'junior', 'politician_id')}
-    
+    if IMAGE_MODEL:
+        raw_id_fields = ('photo_fk', 'thumbnail_fk')
     fieldsets = (
         (None, {
             'fields': (('first_name', 'middle_name', 'last_name', 'junior'), 
-                       ('residence_place', 'residence_state'),'is_presidential_candidate'),
+                       ('residence_place', 'residence_state'),'is_presidential_candidate', 'is_active'),
         }),
         ('Demographics', {
             'fields': ('gender', ('ethnicity', 'hispanic'), 'religion',)

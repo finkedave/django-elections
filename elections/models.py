@@ -72,13 +72,17 @@ class Candidate(models.Model):
     timestamp = models.DateTimeField(blank=True, null=True)
     if IMAGE_MODEL:
         photo_fk = models.ForeignKey(
-            get_model(IMAGE_MODEL), 
+            get_model(*IMAGE_MODEL), 
+            verbose_name="Alternate Photo",
             blank=True, 
-            null=True)
-        thumbnail_tk = models.ForeignKey(
-            get_model(IMAGE_MODEL), 
+            null=True,
+            related_name='alternate_photo')
+        thumbnail_fk = models.ForeignKey(
+            get_model(*IMAGE_MODEL), 
+            verbose_name="Alternate Thumbnail",
             blank=True, 
-            null=True)
+            null=True,
+            related_name='alternate_thumbnail')
     photo = models.FileField(
         upload_to='elections', 
         storage=STORAGE_MODEL(),
@@ -94,6 +98,7 @@ class Candidate(models.Model):
     thumbnail_width = models.IntegerField(blank=True, null=True)
     thumbnail_height = models.IntegerField(blank=True, null=True)
     is_presidential_candidate = models.BooleanField(default=False)
+    is_active = models.BooleanField(default=True)
     @property
     def full_name(self):
         names =[]
@@ -129,7 +134,18 @@ class Candidate(models.Model):
         """ Returns the total amount that has been contributed to a candidate from pacs"""
         return self.pac_contributions.aggregate(total_amount=Sum('amount'))['total_amount']
     
+    def alt_photo(self):
+        if self.photo_fk:
+            return self.photo_fk.file
+        else:
+            return self.photo
     
+    def alt_thumbnail(self):
+        if self.thumbnail_fk:
+            return self.thumbnail_fk.file
+        else:
+            return self.thumbnail
+        
     objects = TestDataManager()
     
     class Meta:
@@ -1133,7 +1149,7 @@ class PastElectionResult(models.Model):
 
 
 RACE_TYPE_CHOICES = (('general', 'General Election'),
-                    ('primary', 'Primary'),
+                    ('primary', 'Presidential Primary'),
                     ('caucus', 'Caucus'))
 
 PARTY_CHOICES = (('republican', 'Republican'),
@@ -1210,7 +1226,84 @@ class LiveMap(models.Model):
                                 self.get_race_type_display())
         else:
             return "%s %s" %(self.race_date.year, self.get_race_type_display())
-        
+
+DELEGATE_ELECTION_PARTY_CHOICES = (('Dem', 'Democrat'),
+                                   ('GOP', 'Republican'),)
+class DelegateElection(models.Model):
+    year = models.IntegerField()
+    party = models.CharField(max_length=10, choices=DELEGATE_ELECTION_PARTY_CHOICES)
+    race_type = models.CharField(max_length=20, choices=RACE_TYPE_CHOICES)
+    total_delegates = models.IntegerField()
+    delegates_needed = models.IntegerField()
+    slug = models.SlugField()
+    
+    def __unicode__(self):
+        return "%s %s - %s" % (self.year, self.get_party_display(), self.get_race_type_display())
+    
+    class Meta:
+        ordering = ['-year', 'party']
+    
+    def save(self, *args, **kwargs):
+        """
+        Make sure the slug is created when imported
+        """
+        if not self.slug:
+            from django.template.defaultfilters import slugify
+            if self.party:
+                self.slug = slugify("%s %s %s" % (self.year, 
+                                self.party, self.race_type))
+            else:
+                self.slug = slugify("%s %s" % (self.year, 
+                                self.race_type))
+        super(DelegateElection, self).save(*args, **kwargs)
+    
+    @models.permalink
+    def get_absolute_url(self):
+        """
+        Get the absolute url for the candidate
+        """
+        if not self.party:
+            category = self.race_type
+        else:
+            category = self.party
+        return ('elections.views.delegate_tracker', (), {'category':category, 'slug': self.slug })
+    
+    def get_state_elections(self):
+        return self.delegatestateelection_set.all()
+    
+    def title(self):
+        return self.__unicode__()
+class DelegateStateElection(models.Model):
+    event_date = models.DateField(blank=True, null=True)
+    delegate_election = models.ForeignKey(DelegateElection)
+    state = models.ForeignKey(State)
+    
+    class Meta:
+        ordering = ['state__name']
+    
+    def __unicode__(self):
+        return "%s - %s" %(self.state, self.event_date)
+    
+    def get_candidate_results(self):
+        return self.candidatedelegatecount_set.filter(delegate_count__gt=0).exclude(
+                                                        candidate__last_name='Uncommitted').select_related('candidate')
+    
+    def candidate_count(self):
+        return self.get_candidate_results().count()
+    
+class CandidateDelegateCount(models.Model):
+    delegate_state_election = models.ForeignKey(DelegateStateElection)
+    candidate = models.ForeignKey(Candidate)
+    delegate_count = models.IntegerField()
+    last_modified = models.DateTimeField(auto_now=True)
+
+    def __unicode__(self):
+        return "%s - %s" %(self.delegate_state_election, self.candidate)
+    
+    class Meta:
+        ordering = ['delegate_count']
+    
+
 def calculate_checksum(obj, mapping=None):
     """ Universal checksum for models that uses the IMPORT_MAPPING attribute
     to make sure that it matches the checksum that will be calculated for an

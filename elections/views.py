@@ -8,7 +8,8 @@ import datetime
 from .models import (Candidate, RaceCounty, RaceDistrict, CountyResult, 
                     DistrictResult, CandidateOffice, CandidateEducation, 
                     CandidateOffice, CandidatePhone, CandidateURL, 
-                    ElectionEvent, PACContribution, State, District, LiveMap)
+                    ElectionEvent, PACContribution, State, District, LiveMap,
+                    DelegateElection)
 import operator
 def state_detail(request, state):
     """
@@ -139,3 +140,44 @@ def create_historical_year_live_map_list(state, excluded_live_map_id=None):
                         for year, live_map_list in historical_year_live_map_dict.iteritems()),
                                                key = operator.itemgetter(0), reverse=True)
     return historical_year_live_map_list
+
+def delegate_tracker(request, category, slug=None):
+    print "here"
+    print category
+    if slug:
+        delegate_election = get_object_or_404(DelegateElection, slug__iexact = slug)
+    else:
+        if category=='general':
+            delegate_election_qs = DelegateElection.objects.filter(race_type=category)
+        else:
+            print category
+            delegate_election_qs = DelegateElection.objects.filter(party=category)
+        if delegate_election_qs.count()==0:
+            raise Http404
+        delegate_election = delegate_election_qs.order_by('-year')[0]
+    return render_to_response(
+                'elections/delegate_tracker.html', 
+                {'delegate_election':delegate_election,
+                 'historical_year_delegate_election_list':create_historical_delegate_election_list(
+                                                                    delegate_election.id)
+                },
+        context_instance=RequestContext(request))
+
+def create_historical_delegate_election_list(excluded_id):
+    historical_delegate_election_qs = DelegateElection.objects
+    if excluded_id:
+        historical_delegate_election_qs = historical_delegate_election_qs.exclude(
+                                                            id=excluded_id)
+    historical_year_delegate_election_dict = {}
+    historical_year_delegate_election_list = []
+    for historical_delegate_election in historical_delegate_election_qs:
+        if historical_delegate_election.year not in historical_year_delegate_election_dict:
+            historical_year_delegate_election_dict[historical_delegate_election.year] = []
+        historical_year_delegate_election_dict[historical_delegate_election.year].append(historical_delegate_election)
+    
+    
+    if historical_year_delegate_election_dict:
+        historical_year_delegate_election_list = sorted(([year, delegate_election_list] \
+                        for year, delegate_election_list in historical_year_delegate_election_dict.iteritems()),
+                                               key = operator.itemgetter(0), reverse=True)
+    return historical_year_delegate_election_list

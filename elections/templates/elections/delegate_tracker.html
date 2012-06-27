@@ -1,0 +1,58 @@
+{% extends "elections/base.html" %}
+{% load humanize %}
+{% block content %}
+<h1>{{delegate_election.title}}</h1>
+<h2>Total Delegates : {{delegate_election.total_delegates|intcomma}}</h2>
+<br/>
+<h2>Delegates Needed to Win: {{delegate_election.delegates_needed|intcomma}}</h2>
+<br/>
+<br/>
+<table>
+    <th>State</th>
+    <th>Candidate</th>
+    <th>Total Delegates</th>
+    {% for state_election in delegate_election.get_state_elections %}
+            {% with state_election.get_candidate_results as candidate_results %}
+	            {% if candidate_results %}
+	              <tr>
+	                <td rowspan='{{state_election.candidate_count}}' valign=top>{{state_election.state.name}}</td>
+		            {% for candidate_result in state_election.get_candidate_results %}
+		                {% if not forloop.first %}
+		                    <tr>
+		                {%endif %}
+			                <td>{{candidate_result.candidate.last_name}}</td>
+			                <td>{{candidate_result.delegate_count|intcomma}}</td>
+		                </tr>
+		            {% endfor %}
+		        {% else %}
+		               <tr>
+			              <td>{{state_election.state.name}}</td>
+			              <td colspan=2 align=middle>No results</td>
+		              </tr>
+		        {% endif %}
+		    {% endwith %}
+        
+    {% endfor %}
+</table>
+
+{% if historical_year_delegate_election_list %}
+<br/>
+ <div class="module full mb">
+     <div class="stateevents">
+         <h3 style="font-size: 19px; font-family: 'Merriweather', serif; color: #003766; font-weight: bold;">Historical Election Results</h3>
+         {% for historical_year_election in historical_year_delegate_election_list %}
+             <h4>
+                 {{historical_year_election.0}}
+             </h4>
+             <ul>
+             {% for election in historical_year_election.1 %}
+                 <li><a href='{{election.get_absolute_url}}'>{{election.title}}</a></li>
+             {% endfor %}
+             </ul>
+         {% endfor %}
+
+     </div>
+ </div>
+ {% endif %}
+        
+{% endblock %}
