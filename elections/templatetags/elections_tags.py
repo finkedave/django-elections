@@ -114,22 +114,69 @@ def do_get_presidential_candidate_list(parser, token):
     """
     Gets all the candidates that are have is_presidential_candidate set to True
     """
+    proper_form = "{% get_presidential_candidate_list [party_id] [is_active] as var %}"
     try:
-        tag_name, as_txt, var = token.split_contents()
+        bits = token.split_contents()
+
+        if len(bits) > 3:
+            party = bits[1]
+            if len(bits) == 5:
+                is_active = bits[2]
+                var = bits[4]
+            else:
+                is_active = None
+                var = bits[3]
+        elif len(bits)==3:
+            var = bits[2]
+            party = None
+            is_active = None
+        else:
+            raise template.TemplateSyntaxError("%s tag shoud be in the form: %s" % (bits[0], proper_form))
     except ValueError:
-        raise template.TemplateSyntaxError("'get_pac_contribution_list' requires an 'as variable name'.")
-    return PresidentialCandiateListNode(var)
+        raise template.TemplateSyntaxError("%s tag shoud be in the form: %s" % (bits[0], proper_form))
+    return PresidentialCandiateListNode(is_active, party, var)
 
 
 class PresidentialCandiateListNode(template.Node):
     """
     Node that creates the presidential candidate list
     """
-    def __init__(self, var_name):
+    def __init__(self, is_active, party, var_name):
         self.var_name = var_name
+        if is_active:
+            self.is_active = Variable(is_active)
+        else:
+            self.is_active = None
+        print party
+        if party:
+            self.party = Variable(party)
+        else:
+            self.party = None
+        print self.party
         
     def render(self, context):
-        presidential_candidate_list = Candidate.objects.filter(is_presidential_candidate=True)
-        context[self.var_name] = presidential_candidate_list
+        presidential_candidate_qs = Candidate.objects.filter(is_presidential_candidate=True)
+        if self.is_active:
+            is_active_resolved = resolve(self.is_active, context)
+            if is_active_resolved:
+                presidential_candidate_qs = presidential_candidate_qs.filter(is_active=to_bool(
+                                                                resolve(self.is_active, context)))
+        if self.party:
+            party_resolved = resolve(self.party, context)
+            if party_resolved:
+                presidential_candidate_qs = presidential_candidate_qs.filter(offices__party_id=resolve(
+                                        self.party, context))
+        presidential_candidate_qs = presidential_candidate_qs.order_by('-is_active', 'offices__party_id')
+        context[self.var_name] = presidential_candidate_qs.distinct('politician_id')
         
         return ''
+
+def to_bool(value):
+    """
+       Converts 'something' to boolean. Raises exception for invalid formats
+           Possible True  values: 1, True, "1", "TRue", "yes", "y", "t"
+           Possible False values: 0, False, None, [], {}, "", "0", "faLse", "no", "n", "f", 0.0, ...
+    """
+    if str(value).lower() in ("yes", "y", "true",  "t", "1", 'True'): return True
+    if str(value).lower() in ("no",  "n", "false", "f", "0", "0.0", "", "none", "[]", "{}", 'False'): return False
+    raise Exception('Invalid value for boolean conversion: ' + str(value))
