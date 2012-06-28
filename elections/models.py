@@ -148,6 +148,27 @@ class Candidate(models.Model):
         
     objects = TestDataManager()
     
+    @property
+    def candidate_money(self):
+        """ Return the first candidate money object """
+        if self.candidatemoney_set.all().count():
+            return self.candidatemoney_set.all()[0]
+        
+    @property
+    def fec_info(self):
+        """ Retieve the CandidateFEC object from the DB if exists,
+        we use candidate money object to get the fec_candidate_id first """
+        if not hasattr(self, 'fec_info_object'):
+            fec_info_object = None
+            candidate_money = self.candidate_money
+            if candidate_money and candidate_money.fec_candidate_id:
+                try:
+                    fec_info_object = CandidateFEC.objects.get(
+                                fec_candidate_id=candidate_money.fec_candidate_id)
+                except CandidateFEC.DoesNotExist:
+                    pass
+            setattr(self, 'fec_info_object', fec_info_object)
+        return getattr(self, 'fec_info_object')
     class Meta:
         ordering = ('last_name', 'first_name')
     
@@ -495,40 +516,40 @@ class CandidateMoney(models.Model):
     fec_office_id = models.CharField(blank=True, null=True, max_length=64)
     fec_postal_id = models.CharField(blank=True, null=True, max_length=64)
     fec_district_id = models.CharField(blank=True, null=True, max_length=64)
-    total_receipts = models.CharField(blank=True, null=True, max_length=100)
-    candidate_loans = models.CharField(blank=True, null=True, max_length=100)
-    other_loans = models.CharField(blank=True, null=True, max_length=100)
-    candidate_loan_repayments = models.CharField(blank=True, null=True, max_length=64)
-    other_loan_repayments = models.CharField(blank=True, null=True, max_length=100)
-    individual_contributions = models.CharField(blank=True, null=True, max_length=100)
-    pac_contributions = models.CharField(blank=True, null=True, max_length=100)
-    ending_cash = models.CharField(blank=True, null=True, max_length=100)
-    date_of_last_report = models.CharField(blank=True, null=True, max_length=100)
-    total_disbursements = models.CharField(blank=True, null=True, max_length=100)
+    total_receipts = models.IntegerField(blank=True, null=True)
+    candidate_loans = models.IntegerField(blank=True, null=True)
+    other_loans = models.IntegerField(blank=True, null=True)
+    candidate_loan_repayments = models.IntegerField(blank=True, null=True)
+    other_loan_repayments = models.IntegerField(blank=True, null=True)
+    individual_contributions = models.IntegerField(blank=True, null=True)
+    pac_contributions = models.IntegerField(blank=True, null=True)
+    ending_cash = models.IntegerField(blank=True, null=True)
+    date_of_last_report = models.DateField(blank=True, null=True)
+    total_disbursements = models.IntegerField(blank=True, null=True)
     checksum = models.CharField(max_length=32)
     
+    """ Ordered mapping between the import file and the model """
+    IMPORT_MAPPING =  ['candidate_id',
+                       'fec_candidate_id',
+                       'fec_office_id',
+                       'fec_postal_id',
+                       'fec_district_id',
+                       'total_receipts',
+                       'candidate_loans',
+                       'other_loans',
+                       'candidate_loan_repayments',
+                       'other_loan_repayments',
+                       'individual_contributions',
+                       'pac_contributions',
+                       'ending_cash',
+                       'date_of_last_report',
+                       'total_disbursements']
+                             
     def calculate_checksum(self):
         """
         Calculate the MD5 checksum for the record
         """
-        import hashlib
-        checksum = hashlib.md5()
-        checksum.update(str(self.candidate.pk))
-        checksum.update(self.fec_candidate_id or '')
-        checksum.update(self.fec_office_id or '')
-        checksum.update(self.fec_postal_id or '')
-        checksum.update(self.fec_district_id or '')
-        checksum.update(self.total_receipts or '')
-        checksum.update(self.candidate_loans or '')
-        checksum.update(self.other_loans or '')
-        checksum.update(self.candidate_loan_repayments or '')
-        checksum.update(self.other_loan_repayments or '')
-        checksum.update(self.individual_contributions or '')
-        checksum.update(self.pac_contributions or '')
-        checksum.update(self.ending_cash or '')
-        checksum.update(self.date_of_last_report or '')
-        checksum.update(self.total_disbursements or '')
-        return checksum.hexdigest()
+        return calculate_checksum(self)
     
     def save(self, *args, **kwargs):
         """
@@ -537,13 +558,188 @@ class CandidateMoney(models.Model):
         self.checksum = self.calculate_checksum()
         super(CandidateMoney, self).save(*args, **kwargs)
     
-
     class Meta:
         pass
 
     def __unicode__(self):
         return u"CandidateMoney"
 
+FEC_OFFICE_CHOICES = (('P', 'President'),
+                      ('S', 'Senate'),
+                      ('H', 'House'))
+FEC_PARTY_CHOICES = (
+    ("AIP", "AMERICAN INDEPENDENT PARTY"),
+    ("AMP", "AMERICAN PARTY"),
+    ("CIT", "CITIZENS' PARTY"),
+    ("CON", "CONSTITUTION PARTY"),
+    ("CRV", "CONSERVATIVE PARTY"),
+    ("CST", "CONSTITUTIONAL"),
+    ("DEM", "DEMOCRATIC PARTY"),
+    ("DFL", "DEMOCRATIC-FARM-LABOR"),
+    ("FED", "FEDERALIST"),
+    ("FRE", "FREEDOM PARTY"),
+    ("GRE", "GREEN PARTY"),
+    ("IAP", "INDEPENDENT AMERICAN PARTY"),
+    ("IDP", "INDEPENDENCE PARTY"),
+    ("IND", "INDEPENDENT"),
+    ("JCN", "JEWISH/CHRISTIAN NATIONAL"),
+    ("LBU", "LIBERTY UNION PARTY"),
+    ("LIB ", "LIBERTARIAN PARTY"),
+    ("NLP", "NATURAL LAW PARTY"),
+    ("NNE", "NONE"),
+    ("NPA", "NO PARTY AFFILIATION"),
+    ("OTH", "OTHER"),
+    ("PAF", "PEACE AND FREEDOM"),
+    ("REF", "REFORM PARTY"),
+    ("REP", "REPUBLICAN PARTY"),
+    ("RTL", "RIGHT TO LIFE"),
+    ("SOC", "SOCIALIST PARTY U.S.A."),
+    ("SUS", "SOCIALIST PARTY"),
+    ("SWP", "SOCIALIST WORKERS PARTY"),
+    ("TX", "TAXPAYERS"),
+    ("UNK", "UNKNOWN"),
+    ("W", "WRITE-IN"),)
+
+class CurrencyField(models.DecimalField):
+    """ Custom field that represents percentage for statistics """
+    def __init__(self, verbose_name=None, name=None, max_digits=14, decimal_places=2, 
+                    blank=True, null=True, **kwargs):
+        super(CurrencyField, self).__init__(verbose_name=verbose_name, name=name, 
+                    max_digits=max_digits, decimal_places=decimal_places, 
+                    blank=blank, null=null, **kwargs)
+from south.modelsinspector import add_introspection_rules
+add_introspection_rules([], ["^elections\.models\.CurrencyField"])
+
+class CandidateFEC(models.Model):
+    """ Model reflecting data from the FEC website http://www.fec.gov/data/CandidateSummary.do,
+    this is tied into AP data using fec_candidate_id """
+    committee_link = models.URLField(blank=True, null=True)
+    fec_candidate_id = models.CharField(blank=True, null=True, max_length=9)
+    name = models.CharField(blank=True, null=True, max_length=90)
+    office = models.CharField(blank=True, null=True, max_length=1)
+    office_state = models.CharField(blank=True, null=True, max_length=2)
+    district_number = models.CharField(blank=True, null=True, max_length=2)
+    party = models.CharField(blank=True, null=True, max_length=3)
+    status = models.CharField(blank=True, null=True, max_length=10)
+    mailing_addr1 = models.TextField(blank=True, null=True)
+    mailing_addr2 = models.TextField(blank=True, null=True)
+    mailing_city = models.CharField(blank=True, null=True, max_length=50)
+    mailing_state = models.CharField(blank=True, null=True, max_length=50)
+    mailing_zipcode = models.CharField(blank=True, null=True, max_length=10)
+    individual_itemized_contrib = CurrencyField(help_text="Sum of itemized contributions from individuals.")
+    individual_unitemized_contrib = CurrencyField(help_text="Sum of unitemized contributions from individuals.")
+    individual_contrib = CurrencyField(help_text="Total contributions from individuals.")
+    party_committee_contrib = CurrencyField()
+    other_committee_contrib = CurrencyField()
+    candidate_contrib = CurrencyField(help_text = "Contributions from the candidate him(her)self")
+    total_contrib = CurrencyField()
+    transfer_from_other_commitee = CurrencyField(help_text ="Candidates may have more than one committee working for their election (including jointfundraising committees). Transfers from others within the set appear here.")
+    candidate_loan = CurrencyField(help_text="Loans received from the candidate.")
+    other_loan = CurrencyField(help_text="Often from banks, but must be made in the normal course of business including interest rates and collateral. Loans from individuals are treated as contributions")
+    total_loan = CurrencyField()
+    offsets_to_operating_expenditures = CurrencyField(help_text = "e.g. refund of deposit for phone bank, etc.") 
+    offsets_to_fundraising = CurrencyField(help_text = "Applies only for Presidential candidates receiving public matching funds in the primaries.")
+    offsets_to_legal_accounting =  CurrencyField()
+    other_receipts =  CurrencyField()
+    total_receipts =  CurrencyField()
+    operating_expenditure =  CurrencyField()
+    exempt_legal_accounting_disbursement =  CurrencyField()
+    fundraising_disbursement = CurrencyField()
+    transfer_to_other_committee = CurrencyField()
+    candidate_loan_repayment = CurrencyField()
+    other_loan_repayment = CurrencyField()
+    total_loan_repayment = CurrencyField()
+    individual_refund = CurrencyField()
+    party_committee_refund = CurrencyField()
+    other_committee_refund = CurrencyField()
+    total_contribution_refund = CurrencyField()
+    other_disbursement = CurrencyField()
+    total_disbursement = CurrencyField()
+    cash_on_hand_beginning_of_period = CurrencyField(help_text = \
+            "Cash balance for the campaign at the start of the two-year period.")
+    cash_on_hand_close_of_period = CurrencyField()
+    net_contribution = CurrencyField()
+    net_operating_expenditure = CurrencyField()
+    debt_owed_by_committee = CurrencyField()
+    debt_owed_to_committee = CurrencyField()
+    coverage_start_date = models.DateField(help_text="Beginning date for the " \
+                "first report during the two year period", blank=True, null=True)
+    coverage_end_date = models.DateField(help_text="Ending date of the most recent report.", 
+                                         blank=True, null=True)
+    checksum = models.CharField(max_length=32)
+    
+    """ Ordered mapping between the import file and the model """
+    IMPORT_MAPPING =  [
+        "committee_link",
+        "fec_candidate_id",
+        "name",
+        "office",
+        "office_state",
+        "district_number",
+        "party",
+        "status",
+        "mailing_addr1",
+        "mailing_addr2",
+        "mailing_city",
+        "mailing_state",
+        "mailing_zipcode",
+        "individual_itemized_contrib",
+        "individual_unitemized_contrib",
+        "individual_contrib",
+        "party_committee_contrib",
+        "other_committee_contrib",
+        "candidate_contrib",
+        "total_contrib",
+        "transfer_from_other_commitee",
+        "candidate_loan",
+        "other_loan",
+        "total_loan",
+        "offsets_to_operating_expenditures",
+        "offsets_to_fundraising",
+        "offsets_to_legal_accounting",
+        "other_receipts",
+        "total_receipts",
+        "operating_expenditure",
+        "exempt_legal_accounting_disbursement",
+        "fundraising_disbursement",
+        "transfer_to_other_committee",
+        "candidate_loan_repayment",
+        "other_loan_repayment",
+        "total_loan_repayment",
+        "individual_refund",
+        "party_committee_refund",
+        "other_committee_refund",
+        "total_contribution_refund",
+        "other_disbursement",
+        "total_disbursement",
+        "cash_on_hand_beginning_of_period",
+        "cash_on_hand_close_of_period",
+        "net_contribution",
+        "net_operating_expenditure",
+        "debt_owed_by_committee",
+        "debt_owed_to_committee",
+        "coverage_start_date",
+        "coverage_end_date"
+    ]
+    class Meta:
+        ordering = ['office_state', 'name',]
+
+    def __unicode__(self):
+        return"%s - %s" % (self.name, self.fec_candidate_id)
+    
+    def save(self, *args, **kwargs):
+        """
+        Add the checksum
+        """
+        self.checksum = self.calculate_checksum()
+        super(CandidateFEC, self).save(*args, **kwargs)
+    
+    def calculate_checksum(self):
+        """
+        Calculate the MD5 checksum for the record
+        """
+        return calculate_checksum(self)
+        
 EVENT_PRESIDENTIAL_KEYWORD_LIST = ['president', 'caucuses', 'persidential', 
                             'national', 'general election', 'closed primary']
 class ElectionEvent(models.Model):
@@ -719,7 +915,7 @@ class PercentField(models.DecimalField):
     """ Custom field that represents percentage for statistics """
     def __init__(self, verbose_name=None, name=None, max_digits=5, decimal_places=2, **kwargs):
         super(PercentField, self).__init__(verbose_name=None, name=None, 
-                                             max_digits=5, decimal_places=2, **kwargs)
+                                             max_digits=max_digits, decimal_places=decimal_places, **kwargs)
 from south.modelsinspector import add_introspection_rules
 add_introspection_rules([], ["^elections\.models\.PercentField"])
 
@@ -1323,6 +1519,7 @@ class DelegateElection(models.Model):
     
     def title(self):
         return self.__unicode__()
+    
 class DelegateStateElection(models.Model):
     event_date = models.DateField(blank=True, null=True)
     delegate_election = models.ForeignKey(DelegateElection)

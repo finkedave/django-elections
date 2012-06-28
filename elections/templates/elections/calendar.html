@@ -17,7 +17,7 @@ Level Type:
         <th>Party</th>
     </tr>
     {% for event in events %}
-    <tr>
+    <tr valign=top>
         {% with event.live_results as live_results %} 
 	        <td>
 	        {% ifchanged event.event_date %}
@@ -32,6 +32,7 @@ Level Type:
 	               {% if live_results|length > 1 %}
 	                   {% for live_result in live_results %}
 	                       <a href='{{live_result.get_absolute_url}}'>{{live_result.get_party_display}}</a>
+	                       <br/>
 	                   {% endfor %}
 	               {%else %}
 	                   <a href='{{live_results.0.get_absolute_url}}'>Results</a>
@@ -44,7 +45,8 @@ Level Type:
 	           {% if live_results %}
                    {% if live_results|length > 1 %}
                        {% for live_result in live_results %}
-                           {{live_result.get_party_display.0}}-{{live_result.delegate_count}};
+                           {{live_result.delegate_count}}
+                           <br/>
                        {% endfor %}
                    {%else %}
                        {{live_results.0.delegate_count}}
