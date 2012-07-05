@@ -2,7 +2,8 @@ from django.contrib import admin
 from .models import (Candidate, RaceCounty, RaceDistrict, CountyResult, 
                     DistrictResult, CandidateOffice, CandidateEducation, 
                     CandidateOffice, CandidatePhone, CandidateURL, State, LiveMap,
-                    ElectionEvent)
+                    ElectionEvent, Poll, PollResult)
+from elections.forms import PollResultForm
 from .settings import IMAGE_MODEL
 
 if IMAGE_MODEL:
@@ -80,7 +81,18 @@ class StateAdmin(admin.ModelAdmin):
     for live maps. We don't want one to change fields that are imported """
     fields = ('state_id', 'postal', 'name', 'livemap_state_id', 'latitude', 
               'longitude', 'livemap_state_zoom')
+
+class PollResultInline(admin.TabularInline):
+    model = PollResult
+    raw_id_fields = ['candidate']
+    form = PollResultForm
+    extra = 2
     
+class PollAdmin(admin.ModelAdmin):
+    list_display = ('date', 'state', 'office', 'source')
+    inlines = [
+        PollResultInline
+    ]
 admin.site.register(RaceCounty)
 admin.site.register(RaceDistrict)
 admin.site.register(CountyResult)
@@ -92,3 +104,4 @@ admin.site.register(CandidateEducation)
 admin.site.register(CandidatePhone)
 admin.site.register(State, StateAdmin)
 admin.site.register(LiveMap, LiveMapAdmin)
+admin.site.register(Poll, PollAdmin)

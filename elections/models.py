@@ -1550,7 +1550,53 @@ class CandidateDelegateCount(models.Model):
     class Meta:
         ordering = ['delegate_count']
     
+class Poll(models.Model):
+    """ Model representing a Poll  """
+    date = models.DateField()
+    state = models.ForeignKey(State, blank=True, null=True)
+    source = models.CharField(max_length=50)
+    office = models.CharField(max_length=1, choices=ELECTION_OFFICE_CHOICES)
+    url = models.URLField(blank=True, null=True)
+    
+    def spread(self):
+        """ helper method that returns the spread of applicable. This will
+        only return a value. If there are 2 results """
+        poll_results = self.results()
+        if poll_results.count() == 2:
+            ahead_result = poll_results[0]
+            behind_result = poll_results[1]
+            if ahead_result.result==behind_result.result:
+                return 'Tie'
+            else:
+                return '%s + %d' %(ahead_result.candidate_name, 
+                                   int(ahead_result.result-behind_result.result))
 
+    def results(self):
+        """ Helper method for returning the poll results """
+        return self.pollresult_set.order_by('-result')
+    
+    class Meta:
+        ordering = ['-date']
+        
+class PollResult(models.Model):
+    """ Poll Result Object """
+    poll = models.ForeignKey(Poll, blank=True, null=True)
+    candidate = models.ForeignKey(Candidate, blank=True, null=True)
+    write_in_candidate_name = models.CharField(max_length=100, blank=True, null=True)
+    result = PercentField()
+    
+    @property
+    def candidate_name(self):
+        """ Return the candidates name for ease of use within templates. Note if
+        the object has a candidate then this returns the last name. Else it returns
+        the write in name """
+        if self.candidate:
+            return self.candidate.last_name
+        else:
+            return self.write_in_candidate_name
+    class Meta:
+        ordering = ['-result']
+        
 def calculate_checksum(obj, mapping=None):
     """ Universal checksum for models that uses the IMPORT_MAPPING attribute
     to make sure that it matches the checksum that will be calculated for an

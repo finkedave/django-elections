@@ -4,7 +4,7 @@ from django.db.models import Sum
 from django.template import Variable, VariableDoesNotExist
 register = template.Library()
 
-from elections.models import PACContribution, Candidate
+from elections.models import PACContribution, Candidate, Poll
 from elections import to_bool
 
 def resolve(var, context):
@@ -167,5 +167,78 @@ class PresidentialCandiateListNode(template.Node):
                                         self.party, context))
         presidential_candidate_qs = presidential_candidate_qs.order_by('-is_active', 'offices__party_id')
         context[self.var_name] = presidential_candidate_qs.distinct('politician_id')
+        
+        return ''
+
+@register.tag('get_latest_polls')
+def do_get_latest_polls(parser, token):
+    """
+    Get the latest polls, latest polls are counted by date. So if someone says i want 
+    the lateest 10 polls. That means get all the polls for the latest 10
+    dates. Thre might be more then 10 polls returned because more then one poll
+    can be done in a day for different races.
+    """
+    proper_form = "{% get_latest_polls count [office] [state_id] as var %}"
+
+    try:
+        bits = token.split_contents()
+        count = bits[1]
+        
+        if len(bits) >= 5:
+            office = bits[2]
+            office = office.replace("'", '').replace('"', '')
+            if len(bits) > 5:
+                state_id = bits[3]
+                var = bits[5]
+            else:
+                var = bits[4]
+                state_id = None
+        else:
+            office = None
+            var = bits[3]
+            state_id = None
+
+    except ValueError:
+        raise template.TemplateSyntaxError("%s tag shoud be in the form: %s" % (bits[0], proper_form))
+    return LatestPollsNode(count, office, state_id, var)
+
+class LatestPollsNode(template.Node):
+    """
+    Node that uses the arguments sent in to return the list
+    """
+    def __init__(self, count, office, state_id, var):
+        self.count = Variable(count)
+        self.var_name = var
+        if state_id:
+            self.state_id = Variable(state_id)
+        else:
+            self.state_id = None
+        if office:
+            self.office = Variable(office)
+        else:
+            self.office = None
+    
+    def render(self, context):
+        count = resolve(self.count, context)
+        
+        polls_qs = Poll.objects.order_by('-date')
+        
+        if self.state_id:
+            state_id = resolve(self.state_id, context)
+            # All states mean genearl poll, ie no state definted
+            if state_id.lower()=='all':
+                polls_qs = polls_qs.filter(state=None)
+            else:
+                polls_qs = polls_qs.filter(state__state_id=state_id)
+        if self.office:
+            polls_qs = polls_qs.filter(office=resolve(self.office, context))
+            
+        dates = polls_qs.values_list('date', flat=True)    
+        if dates.count() > count:
+            dates = dates[:count]
+        
+        latest_polls = polls_qs.filter(date__in=dates)
+
+        context[self.var_name] = latest_polls
         
         return ''
