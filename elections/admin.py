@@ -2,8 +2,8 @@ from django.contrib import admin
 from .models import (Candidate, RaceCounty, RaceDistrict, CountyResult, 
                     DistrictResult, CandidateOffice, CandidateEducation, 
                     CandidateOffice, CandidatePhone, CandidateURL, State, LiveMap,
-                    ElectionEvent, Poll, PollResult)
-from elections.forms import PollResultForm
+                    ElectionEvent, Poll, PollResult, HotRace, HotRaceCandidate)
+from elections.forms import PollResultForm, HotRaceCandidateForm
 from .settings import IMAGE_MODEL
 
 if IMAGE_MODEL:
@@ -93,6 +93,19 @@ class PollAdmin(admin.ModelAdmin):
     inlines = [
         PollResultInline
     ]
+    
+class HotRaceCandidateInline(admin.TabularInline):
+    model = HotRaceCandidate
+    raw_id_fields = ['candidate']
+    form = HotRaceCandidateForm
+    extra = 2
+    
+class HotRaceAdmin(admin.ModelAdmin):
+    list_display = ('name', 'office', 'state', 'date')
+    inlines = [
+        HotRaceCandidateInline
+    ]
+    
 admin.site.register(RaceCounty)
 admin.site.register(RaceDistrict)
 admin.site.register(CountyResult)
@@ -105,3 +118,4 @@ admin.site.register(CandidatePhone)
 admin.site.register(State, StateAdmin)
 admin.site.register(LiveMap, LiveMapAdmin)
 admin.site.register(Poll, PollAdmin)
+admin.site.register(HotRace, HotRaceAdmin)

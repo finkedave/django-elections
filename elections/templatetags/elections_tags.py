@@ -4,7 +4,7 @@ from django.db.models import Sum
 from django.template import Variable, VariableDoesNotExist
 register = template.Library()
 
-from elections.models import PACContribution, Candidate, Poll
+from elections.models import PACContribution, Candidate, Poll, HotRace
 from elections import to_bool
 
 def resolve(var, context):
@@ -189,6 +189,7 @@ def do_get_latest_polls(parser, token):
             office = office.replace("'", '').replace('"', '')
             if len(bits) > 5:
                 state_id = bits[3]
+                state_id = state_id.replace("'", '').replace('"', '')
                 var = bits[5]
             else:
                 var = bits[4]
@@ -240,5 +241,67 @@ class LatestPollsNode(template.Node):
         latest_polls = polls_qs.filter(date__in=dates)
 
         context[self.var_name] = latest_polls
+        
+        return ''
+
+@register.tag('get_hot_races')
+def do_get_hot_races(parser, token):
+    """
+    Get Hot Races. Office and state can be defined for filtering.
+    The valies for office are P, G, H and S
+    """
+    proper_form = "{% get_latest_polls [office] [state_id] as var %}"
+
+    try:
+        bits = token.split_contents()
+        if len(bits) >= 4:
+            office = bits[1]
+            office = office.replace("'", '').replace('"', '')
+            if len(bits) > 4:
+                state_id = bits[2]
+                state_id = state_id.replace("'", '').replace('"', '')
+                var = bits[4]
+            else:
+                var = bits[3]
+                state_id = None
+        else:
+            office = None
+            var = bits[2]
+            state_id = None
+
+    except ValueError:
+        raise template.TemplateSyntaxError("%s tag shoud be in the form: %s" % (bits[0], proper_form))
+    return HotRacesNode(office, state_id, var)
+
+class HotRacesNode(template.Node):
+    """
+    Node that uses the arguments sent in to return the list
+    """
+    def __init__(self, office, state_id, var):
+        self.var_name = var
+        if state_id:
+            self.state_id = Variable(state_id)
+        else:
+            self.state_id = None
+        if office:
+            self.office = Variable(office)
+        else:
+            self.office = None
+    
+    def render(self, context):
+        """ Set the queryset list into context as variable name"""
+        hot_race_qs = HotRace.objects.order_by('date')
+        
+        if self.state_id:
+            state_id = resolve(self.state_id, context)
+            # All states mean genearl poll, ie no state definted
+            if state_id.lower()=='all':
+                hot_race_qs = hot_race_qs.filter(state=None)
+            else:
+                hot_race_qs = hot_race_qs.filter(state__state_id=state_id)
+        if self.office:
+            hot_race_qs = hot_race_qs.filter(office=resolve(self.office, context))
+
+        context[self.var_name] = hot_race_qs
         
         return ''

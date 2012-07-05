@@ -1558,6 +1558,12 @@ class Poll(models.Model):
     office = models.CharField(max_length=1, choices=ELECTION_OFFICE_CHOICES)
     url = models.URLField(blank=True, null=True)
     
+    class Meta:
+        ordering = ['-date']
+    
+    def __unicode__(self):
+        return "%s - %s (%s)" %(self.date, self.candidate_vs_string(), self.source)
+    
     def spread(self):
         """ helper method that returns the spread of applicable. This will
         only return a value. If there are 2 results """
@@ -1570,20 +1576,28 @@ class Poll(models.Model):
             else:
                 return '%s + %d' %(ahead_result.candidate_name, 
                                    int(ahead_result.result-behind_result.result))
-
     def results(self):
         """ Helper method for returning the poll results """
         return self.pollresult_set.order_by('-result')
     
-    class Meta:
-        ordering = ['-date']
-        
+    def candidate_vs_string(self):
+        candidate_name_list = []
+        for result in self.results():
+            candidate_name_list.append(result.candidate_name)
+        return " vs. ".join(candidate_name_list)
+    
 class PollResult(models.Model):
     """ Poll Result Object """
-    poll = models.ForeignKey(Poll, blank=True, null=True)
+    poll = models.ForeignKey(Poll)
     candidate = models.ForeignKey(Candidate, blank=True, null=True)
     write_in_candidate_name = models.CharField(max_length=100, blank=True, null=True)
     result = PercentField()
+    
+    class Meta:
+        ordering = ['-result']
+    
+    def __unicode__(self):
+        return "%s" %(self.candidate_name)
     
     @property
     def candidate_name(self):
@@ -1594,9 +1608,53 @@ class PollResult(models.Model):
             return self.candidate.last_name
         else:
             return self.write_in_candidate_name
-    class Meta:
-        ordering = ['-result']
         
+class HotRace(models.Model):
+    """ Model representing a Hot Race  """
+    
+    name = models.CharField(max_length=100)
+    state = models.ForeignKey(State, blank=True, null=True)
+    office = models.CharField(max_length=1, choices=ELECTION_OFFICE_CHOICES)
+    editorial_note = models.TextField(blank=True, null=True)
+    date = models.DateField(blank=True, null=True, help_text='Date of the Election')
+    
+    class Meta:
+        ordering = ['date']
+    
+    def __unicode__(self):
+        return "%s %s - %s (%s)" %(self.name, self.candidate_vs_string(), 
+                                  self.get_office_display(), self.date)
+    
+    def candidate_vs_string(self):
+        """ create candidate vs string """
+        candidate_name_list = []
+        for candidate in self.candidates():
+            candidate_name_list.append(candidate.candidate_name)
+        return " vs. ".join(candidate_name_list)
+    
+    def candidates(self):
+        """ Return candidate queryset """
+        return self.hotracecandidate_set.all()
+    
+class HotRaceCandidate(models.Model):
+    """ Hot Race Candidate Object """
+    hot_race = models.ForeignKey(HotRace)
+    candidate = models.ForeignKey(Candidate, blank=True, null=True)
+    write_in_candidate_name = models.CharField(max_length=100, blank=True, null=True)
+    
+    def __unicode__(self):
+        return "%s" %(self.candidate_name)
+    
+    @property
+    def candidate_name(self):
+        """ Return the candidates name for ease of use within templates. Note if
+        the object has a candidate then this returns the last name. Else it returns
+        the write in name """
+        if self.candidate:
+            return self.candidate.last_name
+        else:
+            return self.write_in_candidate_name
+
 def calculate_checksum(obj, mapping=None):
     """ Universal checksum for models that uses the IMPORT_MAPPING attribute
     to make sure that it matches the checksum that will be calculated for an
