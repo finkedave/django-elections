@@ -16,7 +16,7 @@ def state_detail(request, state):
     """
     Get a list of stuff for the state
     """
-    offices = CandidateOffice.objects.filter(state=state, status_id__in=["I", "Q"])
+    offices = CandidateOffice.objects.filter(state=state)#, status_id__in=["I", "Q"])
     office_groups = {}
     for ofc in offices:
         if ofc.office in office_groups:
