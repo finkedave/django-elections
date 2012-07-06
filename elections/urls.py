@@ -45,6 +45,7 @@ urlpatterns += patterns('',
     url(r'^delegate-tracker/(?P<category>[a-zA-Z0-9_-]+)/$', 'elections.views.delegate_tracker'),
     url(r'^calendar/$', 'elections.views.calendar'),
     url(r'^polls/$', direct_to_template, {'template': 'elections/polls.html'}),
+    url(r'^hot-races/$', direct_to_template, {'template': 'elections/hot_races.html'}),
     
     
         

@@ -3,7 +3,7 @@ from .models import (Candidate, RaceCounty, RaceDistrict, CountyResult,
                     DistrictResult, CandidateOffice, CandidateEducation, 
                     CandidateOffice, CandidatePhone, CandidateURL, State, LiveMap,
                     ElectionEvent, Poll, PollResult, HotRace, HotRaceCandidate)
-from elections.forms import PollResultForm, HotRaceCandidateForm
+from elections.forms import PollResultForm, HotRaceCandidateForm, HotRaceForm
 from .settings import IMAGE_MODEL
 
 if IMAGE_MODEL:
@@ -102,6 +102,7 @@ class HotRaceCandidateInline(admin.TabularInline):
     
 class HotRaceAdmin(admin.ModelAdmin):
     list_display = ('name', 'office', 'state', 'date')
+    form = HotRaceForm
     inlines = [
         HotRaceCandidateInline
     ]

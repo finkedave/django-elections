@@ -1,0 +1,150 @@
+{% extends "elections/base.html" %}
+{% load elections_tags %}
+{% block content %}
+<h1>Hot Races</h1>
+
+{% get_hot_races H as house_hot_races %}
+{% if house_hot_races %}
+	<hr/>
+	<h3>House</h2>
+	<hr/>
+	 
+	<table>
+	    <tr>
+	        <th>State</th>
+	        <th>Description</th>
+	        <th colspan='100%' align='center'>Candidates</th>
+	    </tr>
+	     {% for hot_race in house_hot_races %}
+	        <tr valign=top>
+		        <td>
+			        <img src="{{ STATIC_URL }}images/2012/icon_{{ hot_race.state.state_id }}.png" alt="{{hot_race.state.name}}" title="{{ hot_race.state.name }}" />
+			        <br/>
+			        <a href='{% url state_profile hot_race.state.state_id %}'>{{hot_race.state.name}}</a>
+		        </td>
+		        <td>
+		            Title - {{hot_race.name}}
+		            <br/>
+		            Date - {{hot_race.date|date:'l, F d'}}
+		            <br/>
+		            Note - {{hot_race.editorial_note}}
+		        </td>
+		        {% for hot_race_candidate in hot_race.candidates %}
+			        <td>
+			            {% if hot_race_candidate.candidate %}
+			                {% with hot_race_candidate.candidate as candidate %}
+			                    {% if candidate.photo %}
+			                        <img src="{{ candidate.photo.url }}" alt="{{ candidate.full_name }}" title="{{ candidate.full_name }}" class="candidateleft" /><br/>
+			                    {% endif %}
+			                    <br/>
+			                    <a href='{% url candidate_detail candidate.slug %}'>{{candidate.full_name}}</a>
+			                {% endwith %}
+			            {% else %}
+			                {{hot_race_candidate.write_in_candidate_name}}
+			           {% endif %}   
+			        </td>
+		        {% endfor %}
+	       </tr>
+	            
+	     {% endfor %}
+	</table>
+{% endif %}
+
+{% get_hot_races S as senate_hot_races %}
+{% if senate_hot_races %}
+	<hr/>
+	 <h3>Senate</h2>
+	 <hr/>
+	 
+	
+	<table>
+	    <tr>
+	        <th>State</th>
+	        <th>Description</th>
+	        <th colspan='100%' align='center'>Candidates</th>
+	    </tr>
+	     {% for hot_race in senate_hot_races %}
+	        <tr valign=top>
+	            <td>
+	                <img src="{{ STATIC_URL }}images/2012/icon_{{ hot_race.state.state_id }}.png" alt="{{hot_race.state.name}}" title="{{ hot_race.state.name }}" />
+	                <br/>
+	                <a href='{% url state_profile hot_race.state.state_id %}'>{{hot_race.state.name}}</a>
+	            </td>
+	            <td>
+	                Title - {{hot_race.name}}
+	                <br/>
+	                Date - {{hot_race.date|date:'l, F d'}}
+	                <br/>
+	                Note - {{hot_race.editorial_note}}
+	            </td>
+	            {% for hot_race_candidate in hot_race.candidates %}
+	                <td>
+	                    {% if hot_race_candidate.candidate %}
+	                        {% with hot_race_candidate.candidate as candidate %}
+	                            {% if candidate.photo %}
+	                                <img src="{{ candidate.photo.url }}" alt="{{ candidate.full_name }}" title="{{ candidate.full_name }}" class="candidateleft" /><br/>
+	                            {% endif %}
+	                            <br/>
+	                            <a href='{% url candidate_detail candidate.slug %}'>{{candidate.full_name}}</a>
+	                        {% endwith %}
+	                    {% else %}
+	                        {{hot_race_candidate.write_in_candidate_name}}
+	                   {% endif %}   
+	                </td>
+	            {% endfor %}
+	       </tr>
+	            
+	     {% endfor %}
+	</table>
+{% endif %}
+
+{% get_hot_races G as governor_hot_races %}
+
+{% if governor_hot_races %}
+	<hr/>
+	 <h3>Governor</h2>
+	 <hr/>
+	 
+	{% get_hot_races G as governor_hot_races %}
+	<table>
+	    <tr>
+	        <th>State</th>
+	        <th>Description</th>
+	        <th colspan='100%' align='center'>Candidates</th>
+	    </tr>
+	     {% for hot_race in governor_hot_races %}
+	        <tr valign=top>
+	            <td>
+	                <img src="{{ STATIC_URL }}images/2012/icon_{{ hot_race.state.state_id }}.png" alt="{{hot_race.state.name}}" title="{{ hot_race.state.name }}" />
+	                <br/>
+	                <a href='{% url state_profile hot_race.state.state_id %}'>{{hot_race.state.name}}</a>
+	            </td>
+	            <td>
+	                Title - {{hot_race.name}}
+	                <br/>
+	                Date - {{hot_race.date|date:'l, F d'}}
+	                <br/>
+	                Note - {{hot_race.editorial_note}}
+	            </td>
+	            {% for hot_race_candidate in hot_race.candidates %}
+	                <td>
+	                    {% if hot_race_candidate.candidate %}
+	                        {% with hot_race_candidate.candidate as candidate %}
+	                            {% if candidate.photo %}
+	                                <img src="{{ candidate.photo.url }}" alt="{{ candidate.full_name }}" title="{{ candidate.full_name }}" class="candidateleft" /><br/>
+	                            {% endif %}
+	                            <br/>
+	                            <a href='{% url candidate_detail candidate.slug %}'>{{candidate.full_name}}</a>
+	                        {% endwith %}
+	                    {% else %}
+	                        {{hot_race_candidate.write_in_candidate_name}}
+	                   {% endif %}   
+	                </td>
+	            {% endfor %}
+	       </tr>
+	            
+	     {% endfor %}
+	</table>
+{% endif %}
+
+{% endblock %}

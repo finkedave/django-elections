@@ -143,8 +143,6 @@ def create_historical_year_live_map_list(state, excluded_live_map_id=None):
     return historical_year_live_map_list
 
 def delegate_tracker(request, category, slug=None):
-    print "here"
-    print category
     if slug:
         delegate_election = get_object_or_404(DelegateElection, slug__iexact = slug)
     else:
