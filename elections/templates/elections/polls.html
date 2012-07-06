@@ -1,0 +1,74 @@
+{% extends "elections/base.html" %}
+{% load elections_tags %}
+{% block content %}
+{% get_latest_polls 30 as polls %}
+ <h1>Polls</h1>
+
+    {% for poll in polls %}
+        {% ifchanged poll.date %} 
+            {% if not forloop.first %}
+                </table>
+            {% endif %}
+            <hr/>
+            <h3/>{{poll.date|date:'l, F d'}}</h3>
+            <hr/>
+            <table>
+                <tr>
+                    <th>State</th>
+                    <th>Office</th>
+                    <th align='center'>Candidates</th>
+                    <th>Spread</th>
+                    <th>Source</th>
+                </tr>
+        {% endifchanged %}
+        <tr>
+            <td valign=top>
+                {% if poll.url %}
+                    <a href='{{poll.url}}'/>
+                {% endif %}
+                {% if poll.state %}
+                    <img src="{{ STATIC_URL }}images/2012/icon_{{ poll.state.state_id }}.png" alt="{{poll.state.name}}" title="{{ poll.state.name }}" />
+                    <br/>
+                    {{poll.state.name}}
+                {% else %}
+                    General Election
+                {% endif %}
+
+                 {% if poll.url %}
+                    </a>
+                {% endif %}
+            </td>
+            <td valign=top>{{poll.get_office_display}}
+            <td>
+                <table>
+                    <tr valign=bottom>
+                        {% for result in poll.results %}
+                            <td>
+	                            {% if result.candidate %}
+	                                {% with result.candidate as candidate %}
+		                                {% if candidate.photo %}
+				                             <img src="{{ candidate.photo.url }}" alt="{{ candidate.full_name }}" title="{{ candidate.full_name }}" class="candidateleft" /><br/>
+				                        {% endif %}
+				                    {% endwith %}
+				                {% endif %}
+				            </td>
+				            <td valign=top>
+				                Name: 
+			                    {% if result.candidate %}
+			                        <a href='{% url candidate_detail result.candidate.slug %}'>{{ result.candidate.full_name }}</a>
+			                     {%else%}
+			                         {{result.write_in_candidate_name}}
+			                     {% endif %}
+				                <br/>
+				                Result: {{ result.result|floatformat }}%
+				            </td>
+			             {% endfor %}
+                    </tr>
+                </table>
+            </td>
+            <td valign=top>{{poll.spread|default_if_none:''}}</td>
+            <td valign=top>{{poll.source}}</td>  
+         </tr>
+    {% endfor %}
+</table>
+{% endblock %}

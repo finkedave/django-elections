@@ -3,7 +3,7 @@ from django.conf.urls.defaults import *
 #     from django.views.generic import ListView, DetailView
 # except ImportError:
 #     from cbv import ListView, DetailView
-
+from django.views.generic.simple import direct_to_template
 from .models import (Candidate, RaceCounty, RaceDistrict, CountyResult, 
                     DistrictResult, CandidateOffice, CandidateEducation, 
                     CandidateOffice, CandidatePhone, CandidateURL,
@@ -44,6 +44,7 @@ urlpatterns += patterns('',
     url(r'^delegate-tracker/(?P<category>[a-zA-Z0-9_-]+)/(?P<slug>[a-zA-Z0-9_-]+)/$', 'elections.views.delegate_tracker'),
     url(r'^delegate-tracker/(?P<category>[a-zA-Z0-9_-]+)/$', 'elections.views.delegate_tracker'),
     url(r'^calendar/$', 'elections.views.calendar'),
+    url(r'^polls/$', direct_to_template, {'template': 'elections/polls.html'}),
     
     
         
