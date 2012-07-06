@@ -93,6 +93,21 @@ class AP(object):
         self.ftp.quit()
         return result
     
+    def get_topofticket_paths_specified(self, election_date, path_to_data, 
+                                 path_to_inits, **kwargs):
+        """
+        Takes a date in any common format (YYYY-MM-DD is preferred) 
+        and returns the results for that date.
+        """
+        try:
+            dt = dateparse(election_date)
+        except ValueError:
+            raise ValueError("The election date you've submitted could not be parsed. Try submitting it in YYYY-MM-DD format.")
+        result = TopOfTicketPathsSpecified(self, dt.strftime("%Y%m%d"), path_to_data, 
+                             path_to_inits, **kwargs)
+        self.ftp.quit()
+        return result
+    
     #
     # Private methods
     #
@@ -682,7 +697,27 @@ class TopOfTicket(BaseAPResults):
     def states(self):
         return [o for o in self._reporting_units.values() if o.is_state]
 
-
+class TopOfTicketPathsSpecified(BaseAPResults):
+    """
+    These United States.
+    
+    Returned by the AP client in response to a `get_topofticket`
+    call. Contains, among its attributes, the results for all races recorded
+    by the AP. This class is used when the paths are known to the files. Reason
+    being is AP is inconsistent with their paths in the past
+    """
+    def __init__(self, client, name, path_to_data, path_to_inits, results=True, delegates=True):
+        self.results_file_path = "%(path)s/US_%(name)s.txt" % {'name': name, 'path':path_to_data}
+        self.delegates_file_path = "%(path)s/US_%(name)s_d.txt" % {'name': name, 'path':path_to_data}
+        self.race_file_path = "%(path)s/US_%(name)s_race.txt" % {'name': name, 'path':path_to_inits}
+        self.reporting_unit_file_path = "%(path)s/US_%(name)s_ru.txt" % {'name': name, 'path':path_to_inits}
+        self.candidate_file_path = "%(path)s/US_%(name)s_pol.txt" % {'name': name, 'path':path_to_inits}
+        super(TopOfTicketPathsSpecified, self).__init__(client, name, results, delegates)
+    
+    @property
+    def states(self):
+        return [o for o in self._reporting_units.values() if o.is_state]
+    
 class Race(object):
     """
     A contest being decided by voters choosing between candidates.

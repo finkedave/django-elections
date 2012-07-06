@@ -87,10 +87,17 @@ def parse_race(race):
         "county_winners": county_winners
     }
 
-def write_results(electiondate):
+def write_results(electiondate, path_to_data=None, path_to_inits=None):
     # Use county_winners to color states using candidate_colors
     client = AP(FTP_USER, FTP_PASSWORD)
-    n = client.get_topofticket(electiondate)
+    
+    # If the paths are send in the paths specifif top of ticket
+    if path_to_data and path_to_inits:
+        n = client.get_topofticket_paths_specified(electiondate, path_to_data, 
+                                                   path_to_inits)
+    else:
+        # else use default
+        n = client.get_topofticket(electiondate)
     
     dt = dateparse(electiondate)
     directory = os.path.join(MAP_RESULTS_DEST, str(dt.year))

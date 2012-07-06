@@ -250,7 +250,7 @@ def do_get_hot_races(parser, token):
     Get Hot Races. Office and state can be defined for filtering.
     The valies for office are P, G, H and S
     """
-    proper_form = "{% get_latest_polls [office] [state_id] as var %}"
+    proper_form = "{% get_hot_races [office] [state_id] as var %}"
 
     try:
         bits = token.split_contents()
