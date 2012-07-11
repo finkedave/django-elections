@@ -32,7 +32,7 @@ urlpatterns = patterns('django.views.generic.list_detail',
         'queryset': Candidate.objects.filter(is_presidential_candidate=True),
         'template_name':'elections/presidential_candidate_list.html',
     }, name='presidential_candidate_list'),
-    url(r'^presidential-candidate//(?P<slug>[a-zA-Z0-9_-]+)/$', 'object_detail', {
+    url(r'^presidential-candidate/(?P<slug>[a-zA-Z0-9_-]+)/$', 'object_detail', {
         'queryset': Candidate.objects.filter(is_presidential_candidate=True),
         'template_name':'elections/presidential_candidate_detail.html',
     }, name='presidential_candidate_detail'),

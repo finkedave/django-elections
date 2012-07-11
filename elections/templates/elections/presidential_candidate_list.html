@@ -2,6 +2,6 @@
 {% block content %}
     <h1>Presidential Candidates</h1>
     <ul>{% for object in object_list %}
-        <li><a href="{{ object.get_absolute_url }}">{{ object.full_name}}</a></li>
+        <li><a href="{% url presidential_candidate_detail object.slug %}">{{ object.full_name}}</a></li>
     {% endfor %}</ul>
 {% endblock %}
