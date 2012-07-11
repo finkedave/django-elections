@@ -7,6 +7,9 @@ from .settings import TEST_DATA_ONLY, IMAGE_MODEL, IMAGE_STORAGE
 from .fields import TestFlagField
 import hashlib
 from django.db.models import Sum
+from settings import HOT_RACE_RELATION_MODELS, HOT_RACE_RELATIONS
+from django.contrib.contenttypes.models import ContentType
+from django.contrib.contenttypes import generic
 STORAGE_MODEL = get_storage_class(IMAGE_STORAGE)
 
 class TestDataManager(models.Manager):
@@ -1522,8 +1525,8 @@ class DelegateElection(models.Model):
     
 class DelegateStateElection(models.Model):
     event_date = models.DateField(blank=True, null=True)
-    delegate_election = models.ForeignKey(DelegateElection)
-    state = models.ForeignKey(State)
+    delegate_election = models.ForeignKey(DelegateElection, editable=False)
+    state = models.ForeignKey(State, editable=False)
     
     class Meta:
         ordering = ['state__name']
@@ -1543,7 +1546,8 @@ class CandidateDelegateCount(models.Model):
     candidate = models.ForeignKey(Candidate)
     delegate_count = models.IntegerField()
     last_modified = models.DateTimeField(auto_now=True)
-
+    winner = models.BooleanField(default=False)
+    
     def __unicode__(self):
         return "%s - %s" %(self.delegate_state_election, self.candidate)
     
@@ -1617,7 +1621,7 @@ class HotRace(models.Model):
     office = models.CharField(max_length=1, choices=ELECTION_OFFICE_CHOICES)
     editorial_note = models.TextField(blank=True, null=True)
     date = models.DateField(blank=True, null=True, help_text='Date of the Election')
-    
+    featured = models.BooleanField(default=False)
     class Meta:
         ordering = ['date']
     
@@ -1635,7 +1639,71 @@ class HotRace(models.Model):
     def candidates(self):
         """ Return candidate queryset """
         return self.hotracecandidate_set.all()
+
+    if HOT_RACE_RELATION_MODELS:
+        def get_related_content_type(self, content_type, relation_type=None):
+            """
+            Get all related items of the specified content type
+            """
+            objects =  self.hotracerelation_set.filter(
+                content_type__model=content_type)
+            if relation_type:
+                objects = objects.filter(relation_type=relation_type)
+            return objects
+        
+        def get_relation_type(self, relation_type):
+            """
+            Get all relations of the specified relation type
+            """
+            return self.hotracerelation_set.filter(relation_type=relation_type)
+        
+        
+        
+        
+        
+        
+if HOT_RACE_RELATION_MODELS:      
+    HOT_RACE_RELATION_LIMITS = reduce(lambda x, y: x|y, HOT_RACE_RELATIONS)
+    class HotRaceRelationManager(models.Manager):
+        """Basic manager with a few convenience methods"""
+        def get_content_type(self, content_type):
+            """
+            Get all the related items with a specific content_type
+            """
+            qs = self.get_query_set()
+            return qs.filter(content_type__name=content_type)
+        
+        def get_relation_type(self, relation_type):
+            """
+            Get all the related items with a specific relation_type
+            """
+            qs = self.get_query_set()
+            return qs.filter(relation_type=relation_type)
     
+    
+    class HotRaceRelation(models.Model):
+        """Related special items """
+        hot_race = models.ForeignKey(HotRace)
+        content_type = models.ForeignKey(
+            ContentType, 
+            limit_choices_to=HOT_RACE_RELATION_LIMITS)
+        object_id = models.PositiveIntegerField()
+        content_object = generic.GenericForeignKey('content_type', 'object_id')
+        relation_type = models.CharField(_("Relation Type"), 
+            max_length="200", 
+            blank=True, 
+            null=True,
+            help_text=_(
+                "A generic name that can be used to access the relation directly."))
+        order = models.PositiveIntegerField(null=True, blank=True)
+        objects = HotRaceRelationManager()
+        
+        def __unicode__(self):
+            return unicode(self.content_object)
+        
+        class Meta:
+            ordering = ('order',)
+            
 class HotRaceCandidate(models.Model):
     """ Hot Race Candidate Object """
     hot_race = models.ForeignKey(HotRace)

@@ -75,7 +75,9 @@ def state_profile(request, state):
     return render_to_response(
         "elections/state_profile.html", 
         {
-            'state':state
+            'state':state,
+            'historical_year_live_map_list':create_historical_year_live_map_list(
+                                    state.state_id)
         },
         context_instance=RequestContext(request))
 

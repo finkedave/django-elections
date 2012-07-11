@@ -28,6 +28,12 @@ urlpatterns = patterns('django.views.generic.list_detail',
     url(r'^candidates/(?P<slug>[a-zA-Z0-9_-]+)/$', 'object_detail', {
         'queryset': Candidate.objects.all(),
     }, name='candidate_detail'),
+    url(r'^presidential-candidate/$', 'object_list', {
+        'queryset': Candidate.objects.filter(is_presidential_candidate=True),
+    }, name='presidential_candidate_list'),
+    url(r'^presidential-candidate//(?P<slug>[a-zA-Z0-9_-]+)/$', 'object_detail', {
+        'queryset': Candidate.objects.filter(is_presidential_candidate=True),
+    }, name='presidential_candidate_detail'),
 )
 
 urlpatterns += patterns('',
@@ -46,6 +52,8 @@ urlpatterns += patterns('',
     url(r'^calendar/$', 'elections.views.calendar'),
     url(r'^polls/$', direct_to_template, {'template': 'elections/polls.html'}),
     url(r'^hot-races/$', direct_to_template, {'template': 'elections/hot_races.html'}),
+    
+    
     
     
         

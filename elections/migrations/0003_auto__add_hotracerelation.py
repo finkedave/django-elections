@@ -8,53 +8,61 @@ class Migration(SchemaMigration):
 
     def forwards(self, orm):
         
-        # Adding field 'Candidate.is_presidential_candidate'
-        db.add_column('elections_candidate', 'is_presidential_candidate', self.gf('django.db.models.fields.BooleanField')(default=False), keep_default=False)
-
-        # Adding field 'PACContribution.last_name'
-        db.add_column('elections_paccontribution', 'last_name', self.gf('django.db.models.fields.CharField')(max_length=50, null=True, blank=True), keep_default=False)
-
-        # Adding field 'PACContribution.first_name'
-        db.add_column('elections_paccontribution', 'first_name', self.gf('django.db.models.fields.CharField')(max_length=50, null=True, blank=True), keep_default=False)
-
-        # Adding field 'PACContribution.middle_name'
-        db.add_column('elections_paccontribution', 'middle_name', self.gf('django.db.models.fields.CharField')(max_length=50, null=True, blank=True), keep_default=False)
-
-        # Changing field 'PACContribution.fec_record_number'
-        db.alter_column('elections_paccontribution', 'fec_record_number', self.gf('django.db.models.fields.CharField')(max_length=20, primary_key=True))
-
-        # Changing field 'PACContribution.recipient_committee'
-        db.alter_column('elections_paccontribution', 'recipient_committee', self.gf('django.db.models.fields.CharField')(max_length=100, null=True))
-
-        # Changing field 'PACContribution.pac_name'
-        db.alter_column('elections_paccontribution', 'pac_name', self.gf('django.db.models.fields.CharField')(max_length=100, null=True))
+        # Adding model 'HotRaceRelation'
+        db.create_table('elections_hotracerelation', (
+            ('id', self.gf('django.db.models.fields.AutoField')(primary_key=True)),
+            ('hot_race', self.gf('django.db.models.fields.related.ForeignKey')(to=orm['elections.HotRace'])),
+            ('content_type', self.gf('django.db.models.fields.related.ForeignKey')(to=orm['contenttypes.ContentType'])),
+            ('object_id', self.gf('django.db.models.fields.PositiveIntegerField')()),
+            ('relation_type', self.gf('django.db.models.fields.CharField')(max_length='200', null=True, blank=True)),
+            ('order', self.gf('django.db.models.fields.PositiveIntegerField')(null=True, blank=True)),
+        ))
+        db.send_create_signal('elections', ['HotRaceRelation'])
 
 
     def backwards(self, orm):
         
-        # Deleting field 'Candidate.is_presidential_candidate'
-        db.delete_column('elections_candidate', 'is_presidential_candidate')
-
-        # Deleting field 'PACContribution.last_name'
-        db.delete_column('elections_paccontribution', 'last_name')
-
-        # Deleting field 'PACContribution.first_name'
-        db.delete_column('elections_paccontribution', 'first_name')
-
-        # Deleting field 'PACContribution.middle_name'
-        db.delete_column('elections_paccontribution', 'middle_name')
-
-        # Changing field 'PACContribution.fec_record_number'
-        db.alter_column('elections_paccontribution', 'fec_record_number', self.gf('django.db.models.fields.CharField')(max_length=7, primary_key=True))
-
-        # Changing field 'PACContribution.recipient_committee'
-        db.alter_column('elections_paccontribution', 'recipient_committee', self.gf('django.db.models.fields.CharField')(default='', max_length=100))
-
-        # Changing field 'PACContribution.pac_name'
-        db.alter_column('elections_paccontribution', 'pac_name', self.gf('django.db.models.fields.CharField')(default='', max_length=100))
+        # Deleting model 'HotRaceRelation'
+        db.delete_table('elections_hotracerelation')
 
 
     models = {
+        'auth.group': {
+            'Meta': {'object_name': 'Group'},
+            'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
+            'name': ('django.db.models.fields.CharField', [], {'unique': 'True', 'max_length': '80'}),
+            'permissions': ('django.db.models.fields.related.ManyToManyField', [], {'to': "orm['auth.Permission']", 'symmetrical': 'False', 'blank': 'True'})
+        },
+        'auth.permission': {
+            'Meta': {'ordering': "('content_type__app_label', 'content_type__model', 'codename')", 'unique_together': "(('content_type', 'codename'),)", 'object_name': 'Permission'},
+            'codename': ('django.db.models.fields.CharField', [], {'max_length': '100'}),
+            'content_type': ('django.db.models.fields.related.ForeignKey', [], {'to': "orm['contenttypes.ContentType']"}),
+            'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
+            'name': ('django.db.models.fields.CharField', [], {'max_length': '50'})
+        },
+        'auth.user': {
+            'Meta': {'object_name': 'User'},
+            'date_joined': ('django.db.models.fields.DateTimeField', [], {'default': 'datetime.datetime.now'}),
+            'email': ('django.db.models.fields.EmailField', [], {'max_length': '75', 'blank': 'True'}),
+            'first_name': ('django.db.models.fields.CharField', [], {'max_length': '30', 'blank': 'True'}),
+            'groups': ('django.db.models.fields.related.ManyToManyField', [], {'to': "orm['auth.Group']", 'symmetrical': 'False', 'blank': 'True'}),
+            'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
+            'is_active': ('django.db.models.fields.BooleanField', [], {'default': 'True'}),
+            'is_staff': ('django.db.models.fields.BooleanField', [], {'default': 'False'}),
+            'is_superuser': ('django.db.models.fields.BooleanField', [], {'default': 'False'}),
+            'last_login': ('django.db.models.fields.DateTimeField', [], {'default': 'datetime.datetime.now'}),
+            'last_name': ('django.db.models.fields.CharField', [], {'max_length': '30', 'blank': 'True'}),
+            'password': ('django.db.models.fields.CharField', [], {'max_length': '128'}),
+            'user_permissions': ('django.db.models.fields.related.ManyToManyField', [], {'to': "orm['auth.Permission']", 'symmetrical': 'False', 'blank': 'True'}),
+            'username': ('django.db.models.fields.CharField', [], {'unique': 'True', 'max_length': '30'})
+        },
+        'contenttypes.contenttype': {
+            'Meta': {'ordering': "('name',)", 'unique_together': "(('app_label', 'model'),)", 'object_name': 'ContentType', 'db_table': "'django_content_type'"},
+            'app_label': ('django.db.models.fields.CharField', [], {'max_length': '100'}),
+            'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
+            'model': ('django.db.models.fields.CharField', [], {'max_length': '100'}),
+            'name': ('django.db.models.fields.CharField', [], {'max_length': '100'})
+        },
         'elections.candidate': {
             'Meta': {'ordering': "('last_name', 'first_name')", 'object_name': 'Candidate'},
             'ap_candidate_id': ('django.db.models.fields.IntegerField', [], {'unique': 'True'}),
@@ -70,11 +78,13 @@ class Migration(SchemaMigration):
             'first_name': ('django.db.models.fields.CharField', [], {'max_length': '64', 'null': 'True', 'blank': 'True'}),
             'gender': ('django.db.models.fields.CharField', [], {'max_length': '1', 'null': 'True', 'blank': 'True'}),
             'hispanic': ('django.db.models.fields.CharField', [], {'max_length': '100', 'null': 'True', 'blank': 'True'}),
+            'is_active': ('django.db.models.fields.BooleanField', [], {'default': 'True'}),
             'is_presidential_candidate': ('django.db.models.fields.BooleanField', [], {'default': 'False'}),
             'junior': ('django.db.models.fields.CharField', [], {'max_length': '16', 'null': 'True', 'blank': 'True'}),
             'last_name': ('django.db.models.fields.CharField', [], {'max_length': '64', 'null': 'True', 'blank': 'True'}),
             'middle_name': ('django.db.models.fields.CharField', [], {'max_length': '64', 'null': 'True', 'blank': 'True'}),
             'photo': ('django.db.models.fields.files.FileField', [], {'max_length': '100', 'null': 'True', 'blank': 'True'}),
+            'photo_fk': ('django.db.models.fields.related.ForeignKey', [], {'blank': 'True', 'related_name': "'alternate_photo'", 'null': 'True', 'to': "orm['massmedia.Image']"}),
             'photo_height': ('django.db.models.fields.IntegerField', [], {'null': 'True', 'blank': 'True'}),
             'photo_width': ('django.db.models.fields.IntegerField', [], {'null': 'True', 'blank': 'True'}),
             'politician_id': ('django.db.models.fields.IntegerField', [], {'primary_key': 'True'}),
@@ -85,11 +95,21 @@ class Migration(SchemaMigration):
             'slug': ('django.db.models.fields.SlugField', [], {'max_length': '50', 'db_index': 'True'}),
             'test_flag': ('elections.fields.TestFlagField', [], {'default': "'l'", 'max_length': '1'}),
             'thumbnail': ('django.db.models.fields.files.FileField', [], {'max_length': '100', 'null': 'True', 'blank': 'True'}),
+            'thumbnail_fk': ('django.db.models.fields.related.ForeignKey', [], {'blank': 'True', 'related_name': "'alternate_thumbnail'", 'null': 'True', 'to': "orm['massmedia.Image']"}),
             'thumbnail_height': ('django.db.models.fields.IntegerField', [], {'null': 'True', 'blank': 'True'}),
             'thumbnail_width': ('django.db.models.fields.IntegerField', [], {'null': 'True', 'blank': 'True'}),
             'timestamp': ('django.db.models.fields.DateTimeField', [], {'null': 'True', 'blank': 'True'}),
             'use_junior': ('django.db.models.fields.BooleanField', [], {'default': 'False'}),
             'year_first_elected': ('django.db.models.fields.IntegerField', [], {'null': 'True', 'blank': 'True'})
+        },
+        'elections.candidatedelegatecount': {
+            'Meta': {'ordering': "['delegate_count']", 'object_name': 'CandidateDelegateCount'},
+            'candidate': ('django.db.models.fields.related.ForeignKey', [], {'to': "orm['elections.Candidate']"}),
+            'delegate_count': ('django.db.models.fields.IntegerField', [], {}),
+            'delegate_state_election': ('django.db.models.fields.related.ForeignKey', [], {'to': "orm['elections.DelegateStateElection']"}),
+            'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
+            'last_modified': ('django.db.models.fields.DateTimeField', [], {'auto_now': 'True', 'blank': 'True'}),
+            'winner': ('django.db.models.fields.BooleanField', [], {'default': 'True'})
         },
         'elections.candidateeducation': {
             'Meta': {'object_name': 'CandidateEducation'},
@@ -105,6 +125,61 @@ class Migration(SchemaMigration):
             'school_state': ('django.db.models.fields.CharField', [], {'max_length': '2', 'null': 'True', 'blank': 'True'}),
             'school_type': ('django.db.models.fields.CharField', [], {'max_length': '64', 'null': 'True', 'blank': 'True'})
         },
+        'elections.candidatefec': {
+            'Meta': {'ordering': "['office_state', 'name']", 'object_name': 'CandidateFEC'},
+            'candidate_contrib': ('elections.models.CurrencyField', [], {'null': 'True', 'max_digits': '14', 'decimal_places': '2', 'blank': 'True'}),
+            'candidate_loan': ('elections.models.CurrencyField', [], {'null': 'True', 'max_digits': '14', 'decimal_places': '2', 'blank': 'True'}),
+            'candidate_loan_repayment': ('elections.models.CurrencyField', [], {'null': 'True', 'max_digits': '14', 'decimal_places': '2', 'blank': 'True'}),
+            'cash_on_hand_beginning_of_period': ('elections.models.CurrencyField', [], {'null': 'True', 'max_digits': '14', 'decimal_places': '2', 'blank': 'True'}),
+            'cash_on_hand_close_of_period': ('elections.models.CurrencyField', [], {'null': 'True', 'max_digits': '14', 'decimal_places': '2', 'blank': 'True'}),
+            'checksum': ('django.db.models.fields.CharField', [], {'max_length': '32'}),
+            'committee_link': ('django.db.models.fields.URLField', [], {'max_length': '200', 'null': 'True', 'blank': 'True'}),
+            'coverage_end_date': ('django.db.models.fields.DateField', [], {'null': 'True', 'blank': 'True'}),
+            'coverage_start_date': ('django.db.models.fields.DateField', [], {'null': 'True', 'blank': 'True'}),
+            'debt_owed_by_committee': ('elections.models.CurrencyField', [], {'null': 'True', 'max_digits': '14', 'decimal_places': '2', 'blank': 'True'}),
+            'debt_owed_to_committee': ('elections.models.CurrencyField', [], {'null': 'True', 'max_digits': '14', 'decimal_places': '2', 'blank': 'True'}),
+            'district_number': ('django.db.models.fields.CharField', [], {'max_length': '2', 'null': 'True', 'blank': 'True'}),
+            'exempt_legal_accounting_disbursement': ('elections.models.CurrencyField', [], {'null': 'True', 'max_digits': '14', 'decimal_places': '2', 'blank': 'True'}),
+            'fec_candidate_id': ('django.db.models.fields.CharField', [], {'max_length': '9', 'null': 'True', 'blank': 'True'}),
+            'fundraising_disbursement': ('elections.models.CurrencyField', [], {'null': 'True', 'max_digits': '14', 'decimal_places': '2', 'blank': 'True'}),
+            'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
+            'individual_contrib': ('elections.models.CurrencyField', [], {'null': 'True', 'max_digits': '14', 'decimal_places': '2', 'blank': 'True'}),
+            'individual_itemized_contrib': ('elections.models.CurrencyField', [], {'null': 'True', 'max_digits': '14', 'decimal_places': '2', 'blank': 'True'}),
+            'individual_refund': ('elections.models.CurrencyField', [], {'null': 'True', 'max_digits': '14', 'decimal_places': '2', 'blank': 'True'}),
+            'individual_unitemized_contrib': ('elections.models.CurrencyField', [], {'null': 'True', 'max_digits': '14', 'decimal_places': '2', 'blank': 'True'}),
+            'mailing_addr1': ('django.db.models.fields.TextField', [], {'null': 'True', 'blank': 'True'}),
+            'mailing_addr2': ('django.db.models.fields.TextField', [], {'null': 'True', 'blank': 'True'}),
+            'mailing_city': ('django.db.models.fields.CharField', [], {'max_length': '50', 'null': 'True', 'blank': 'True'}),
+            'mailing_state': ('django.db.models.fields.CharField', [], {'max_length': '50', 'null': 'True', 'blank': 'True'}),
+            'mailing_zipcode': ('django.db.models.fields.CharField', [], {'max_length': '10', 'null': 'True', 'blank': 'True'}),
+            'name': ('django.db.models.fields.CharField', [], {'max_length': '90', 'null': 'True', 'blank': 'True'}),
+            'net_contribution': ('elections.models.CurrencyField', [], {'null': 'True', 'max_digits': '14', 'decimal_places': '2', 'blank': 'True'}),
+            'net_operating_expenditure': ('elections.models.CurrencyField', [], {'null': 'True', 'max_digits': '14', 'decimal_places': '2', 'blank': 'True'}),
+            'office': ('django.db.models.fields.CharField', [], {'max_length': '1', 'null': 'True', 'blank': 'True'}),
+            'office_state': ('django.db.models.fields.CharField', [], {'max_length': '2', 'null': 'True', 'blank': 'True'}),
+            'offsets_to_fundraising': ('elections.models.CurrencyField', [], {'null': 'True', 'max_digits': '14', 'decimal_places': '2', 'blank': 'True'}),
+            'offsets_to_legal_accounting': ('elections.models.CurrencyField', [], {'null': 'True', 'max_digits': '14', 'decimal_places': '2', 'blank': 'True'}),
+            'offsets_to_operating_expenditures': ('elections.models.CurrencyField', [], {'null': 'True', 'max_digits': '14', 'decimal_places': '2', 'blank': 'True'}),
+            'operating_expenditure': ('elections.models.CurrencyField', [], {'null': 'True', 'max_digits': '14', 'decimal_places': '2', 'blank': 'True'}),
+            'other_committee_contrib': ('elections.models.CurrencyField', [], {'null': 'True', 'max_digits': '14', 'decimal_places': '2', 'blank': 'True'}),
+            'other_committee_refund': ('elections.models.CurrencyField', [], {'null': 'True', 'max_digits': '14', 'decimal_places': '2', 'blank': 'True'}),
+            'other_disbursement': ('elections.models.CurrencyField', [], {'null': 'True', 'max_digits': '14', 'decimal_places': '2', 'blank': 'True'}),
+            'other_loan': ('elections.models.CurrencyField', [], {'null': 'True', 'max_digits': '14', 'decimal_places': '2', 'blank': 'True'}),
+            'other_loan_repayment': ('elections.models.CurrencyField', [], {'null': 'True', 'max_digits': '14', 'decimal_places': '2', 'blank': 'True'}),
+            'other_receipts': ('elections.models.CurrencyField', [], {'null': 'True', 'max_digits': '14', 'decimal_places': '2', 'blank': 'True'}),
+            'party': ('django.db.models.fields.CharField', [], {'max_length': '3', 'null': 'True', 'blank': 'True'}),
+            'party_committee_contrib': ('elections.models.CurrencyField', [], {'null': 'True', 'max_digits': '14', 'decimal_places': '2', 'blank': 'True'}),
+            'party_committee_refund': ('elections.models.CurrencyField', [], {'null': 'True', 'max_digits': '14', 'decimal_places': '2', 'blank': 'True'}),
+            'status': ('django.db.models.fields.CharField', [], {'max_length': '10', 'null': 'True', 'blank': 'True'}),
+            'total_contrib': ('elections.models.CurrencyField', [], {'null': 'True', 'max_digits': '14', 'decimal_places': '2', 'blank': 'True'}),
+            'total_contribution_refund': ('elections.models.CurrencyField', [], {'null': 'True', 'max_digits': '14', 'decimal_places': '2', 'blank': 'True'}),
+            'total_disbursement': ('elections.models.CurrencyField', [], {'null': 'True', 'max_digits': '14', 'decimal_places': '2', 'blank': 'True'}),
+            'total_loan': ('elections.models.CurrencyField', [], {'null': 'True', 'max_digits': '14', 'decimal_places': '2', 'blank': 'True'}),
+            'total_loan_repayment': ('elections.models.CurrencyField', [], {'null': 'True', 'max_digits': '14', 'decimal_places': '2', 'blank': 'True'}),
+            'total_receipts': ('elections.models.CurrencyField', [], {'null': 'True', 'max_digits': '14', 'decimal_places': '2', 'blank': 'True'}),
+            'transfer_from_other_commitee': ('elections.models.CurrencyField', [], {'null': 'True', 'max_digits': '14', 'decimal_places': '2', 'blank': 'True'}),
+            'transfer_to_other_committee': ('elections.models.CurrencyField', [], {'null': 'True', 'max_digits': '14', 'decimal_places': '2', 'blank': 'True'})
+        },
         'elections.candidatemedia': {
             'Meta': {'object_name': 'CandidateMedia'},
             'candidate': ('django.db.models.fields.related.ForeignKey', [], {'to': "orm['elections.Candidate']"}),
@@ -117,22 +192,22 @@ class Migration(SchemaMigration):
         'elections.candidatemoney': {
             'Meta': {'object_name': 'CandidateMoney'},
             'candidate': ('django.db.models.fields.related.ForeignKey', [], {'to': "orm['elections.Candidate']"}),
-            'candidate_loan_repayments': ('django.db.models.fields.CharField', [], {'max_length': '64', 'null': 'True', 'blank': 'True'}),
-            'candidate_loans': ('django.db.models.fields.CharField', [], {'max_length': '100', 'null': 'True', 'blank': 'True'}),
+            'candidate_loan_repayments': ('django.db.models.fields.IntegerField', [], {'null': 'True', 'blank': 'True'}),
+            'candidate_loans': ('django.db.models.fields.IntegerField', [], {'null': 'True', 'blank': 'True'}),
             'checksum': ('django.db.models.fields.CharField', [], {'max_length': '32'}),
-            'date_of_last_report': ('django.db.models.fields.CharField', [], {'max_length': '100', 'null': 'True', 'blank': 'True'}),
-            'ending_cash': ('django.db.models.fields.CharField', [], {'max_length': '100', 'null': 'True', 'blank': 'True'}),
+            'date_of_last_report': ('django.db.models.fields.DateField', [], {'null': 'True', 'blank': 'True'}),
+            'ending_cash': ('django.db.models.fields.IntegerField', [], {'null': 'True', 'blank': 'True'}),
             'fec_candidate_id': ('django.db.models.fields.CharField', [], {'max_length': '64', 'null': 'True', 'blank': 'True'}),
             'fec_district_id': ('django.db.models.fields.CharField', [], {'max_length': '64', 'null': 'True', 'blank': 'True'}),
             'fec_office_id': ('django.db.models.fields.CharField', [], {'max_length': '64', 'null': 'True', 'blank': 'True'}),
             'fec_postal_id': ('django.db.models.fields.CharField', [], {'max_length': '64', 'null': 'True', 'blank': 'True'}),
             'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
-            'individual_contributions': ('django.db.models.fields.CharField', [], {'max_length': '100', 'null': 'True', 'blank': 'True'}),
-            'other_loan_repayments': ('django.db.models.fields.CharField', [], {'max_length': '100', 'null': 'True', 'blank': 'True'}),
-            'other_loans': ('django.db.models.fields.CharField', [], {'max_length': '100', 'null': 'True', 'blank': 'True'}),
-            'pac_contributions': ('django.db.models.fields.CharField', [], {'max_length': '100', 'null': 'True', 'blank': 'True'}),
-            'total_disbursements': ('django.db.models.fields.CharField', [], {'max_length': '100', 'null': 'True', 'blank': 'True'}),
-            'total_receipts': ('django.db.models.fields.CharField', [], {'max_length': '100', 'null': 'True', 'blank': 'True'})
+            'individual_contributions': ('django.db.models.fields.IntegerField', [], {'null': 'True', 'blank': 'True'}),
+            'other_loan_repayments': ('django.db.models.fields.IntegerField', [], {'null': 'True', 'blank': 'True'}),
+            'other_loans': ('django.db.models.fields.IntegerField', [], {'null': 'True', 'blank': 'True'}),
+            'pac_contributions': ('django.db.models.fields.IntegerField', [], {'null': 'True', 'blank': 'True'}),
+            'total_disbursements': ('django.db.models.fields.IntegerField', [], {'null': 'True', 'blank': 'True'}),
+            'total_receipts': ('django.db.models.fields.IntegerField', [], {'null': 'True', 'blank': 'True'})
         },
         'elections.candidateoffice': {
             'Meta': {'ordering': "['state', 'office', 'district_name']", 'object_name': 'CandidateOffice'},
@@ -181,6 +256,23 @@ class Migration(SchemaMigration):
             'test_flag': ('elections.fields.TestFlagField', [], {'default': "'l'", 'max_length': '1'}),
             'vote_count': ('django.db.models.fields.IntegerField', [], {'default': '0'}),
             'winner': ('django.db.models.fields.CharField', [], {'max_length': '1', 'null': 'True', 'blank': 'True'})
+        },
+        'elections.delegateelection': {
+            'Meta': {'ordering': "['-year', 'party']", 'object_name': 'DelegateElection'},
+            'delegates_needed': ('django.db.models.fields.IntegerField', [], {}),
+            'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
+            'party': ('django.db.models.fields.CharField', [], {'max_length': '10'}),
+            'race_type': ('django.db.models.fields.CharField', [], {'max_length': '20'}),
+            'slug': ('django.db.models.fields.SlugField', [], {'max_length': '50', 'db_index': 'True'}),
+            'total_delegates': ('django.db.models.fields.IntegerField', [], {}),
+            'year': ('django.db.models.fields.IntegerField', [], {})
+        },
+        'elections.delegatestateelection': {
+            'Meta': {'ordering': "['state__name']", 'object_name': 'DelegateStateElection'},
+            'delegate_election': ('django.db.models.fields.related.ForeignKey', [], {'to': "orm['elections.DelegateElection']"}),
+            'event_date': ('django.db.models.fields.DateField', [], {'null': 'True', 'blank': 'True'}),
+            'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
+            'state': ('django.db.models.fields.related.ForeignKey', [], {'to': "orm['elections.State']"})
         },
         'elections.district': {
             'Meta': {'ordering': "['state_postal', 'district_number']", 'object_name': 'District'},
@@ -240,13 +332,39 @@ class Migration(SchemaMigration):
             'winner': ('django.db.models.fields.CharField', [], {'max_length': '1', 'null': 'True', 'blank': 'True'})
         },
         'elections.electionevent': {
-            'Meta': {'ordering': "['event_date']", 'object_name': 'ElectionEvent'},
+            'Meta': {'ordering': "['event_date', 'state_name']", 'object_name': 'ElectionEvent'},
             'checksum': ('django.db.models.fields.CharField', [], {'max_length': '32'}),
             'description': ('django.db.models.fields.CharField', [], {'max_length': '255', 'blank': 'True'}),
             'event_code': ('django.db.models.fields.CharField', [], {'max_length': '20', 'primary_key': 'True'}),
             'event_date': ('django.db.models.fields.DateField', [], {}),
             'state': ('django.db.models.fields.CharField', [], {'max_length': '2'}),
             'state_name': ('django.db.models.fields.CharField', [], {'max_length': '32'})
+        },
+        'elections.hotrace': {
+            'Meta': {'ordering': "['date']", 'object_name': 'HotRace'},
+            'date': ('django.db.models.fields.DateField', [], {'null': 'True', 'blank': 'True'}),
+            'editorial_note': ('django.db.models.fields.TextField', [], {'null': 'True', 'blank': 'True'}),
+            'featured': ('django.db.models.fields.BooleanField', [], {'default': 'True'}),
+            'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
+            'name': ('django.db.models.fields.CharField', [], {'max_length': '100'}),
+            'office': ('django.db.models.fields.CharField', [], {'max_length': '1'}),
+            'state': ('django.db.models.fields.related.ForeignKey', [], {'to': "orm['elections.State']", 'null': 'True', 'blank': 'True'})
+        },
+        'elections.hotracecandidate': {
+            'Meta': {'object_name': 'HotRaceCandidate'},
+            'candidate': ('django.db.models.fields.related.ForeignKey', [], {'to': "orm['elections.Candidate']", 'null': 'True', 'blank': 'True'}),
+            'hot_race': ('django.db.models.fields.related.ForeignKey', [], {'to': "orm['elections.HotRace']"}),
+            'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
+            'write_in_candidate_name': ('django.db.models.fields.CharField', [], {'max_length': '100', 'null': 'True', 'blank': 'True'})
+        },
+        'elections.hotracerelation': {
+            'Meta': {'ordering': "('order',)", 'object_name': 'HotRaceRelation'},
+            'content_type': ('django.db.models.fields.related.ForeignKey', [], {'to': "orm['contenttypes.ContentType']"}),
+            'hot_race': ('django.db.models.fields.related.ForeignKey', [], {'to': "orm['elections.HotRace']"}),
+            'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
+            'object_id': ('django.db.models.fields.PositiveIntegerField', [], {}),
+            'order': ('django.db.models.fields.PositiveIntegerField', [], {'null': 'True', 'blank': 'True'}),
+            'relation_type': ('django.db.models.fields.CharField', [], {'max_length': "'200'", 'null': 'True', 'blank': 'True'})
         },
         'elections.livemap': {
             'Meta': {'ordering': "['-race_date', 'race_type', 'party']", 'object_name': 'LiveMap'},
@@ -316,6 +434,23 @@ class Migration(SchemaMigration):
             'suffix': ('django.db.models.fields.CharField', [], {'max_length': '25', 'null': 'True', 'blank': 'True'}),
             'vote': ('django.db.models.fields.IntegerField', [], {'null': 'True', 'blank': 'True'}),
             'winner': ('django.db.models.fields.NullBooleanField', [], {'null': 'True', 'blank': 'True'})
+        },
+        'elections.poll': {
+            'Meta': {'ordering': "['-date']", 'object_name': 'Poll'},
+            'date': ('django.db.models.fields.DateField', [], {}),
+            'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
+            'office': ('django.db.models.fields.CharField', [], {'max_length': '1'}),
+            'source': ('django.db.models.fields.CharField', [], {'max_length': '50'}),
+            'state': ('django.db.models.fields.related.ForeignKey', [], {'to': "orm['elections.State']", 'null': 'True', 'blank': 'True'}),
+            'url': ('django.db.models.fields.URLField', [], {'max_length': '200', 'null': 'True', 'blank': 'True'})
+        },
+        'elections.pollresult': {
+            'Meta': {'ordering': "['-result']", 'object_name': 'PollResult'},
+            'candidate': ('django.db.models.fields.related.ForeignKey', [], {'to': "orm['elections.Candidate']", 'null': 'True', 'blank': 'True'}),
+            'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
+            'poll': ('django.db.models.fields.related.ForeignKey', [], {'to': "orm['elections.Poll']"}),
+            'result': ('elections.models.PercentField', [], {'max_digits': '5', 'decimal_places': '2'}),
+            'write_in_candidate_name': ('django.db.models.fields.CharField', [], {'max_length': '100', 'null': 'True', 'blank': 'True'})
         },
         'elections.presidentialelectionresult': {
             'Meta': {'ordering': "['-election_year']", 'unique_together': "(('state', 'election_year'),)", 'object_name': 'PresidentialElectionResult'},
@@ -453,6 +588,36 @@ class Migration(SchemaMigration):
             'us_senate_2': ('django.db.models.fields.CharField', [], {'max_length': '100', 'null': 'True', 'blank': 'True'}),
             'us_senate_split': ('django.db.models.fields.CharField', [], {'max_length': '100', 'null': 'True', 'blank': 'True'}),
             'white_percent': ('elections.models.PercentField', [], {'null': 'True', 'max_digits': '5', 'decimal_places': '2', 'blank': 'True'})
+        },
+        'massmedia.image': {
+            'Meta': {'ordering': "('-creation_date',)", 'object_name': 'Image'},
+            'author': ('django.db.models.fields.related.ForeignKey', [], {'to': "orm['auth.User']", 'null': 'True', 'blank': 'True'}),
+            'caption': ('django.db.models.fields.TextField', [], {'blank': 'True'}),
+            'creation_date': ('django.db.models.fields.DateTimeField', [], {'auto_now_add': 'True', 'blank': 'True'}),
+            'external_url': ('django.db.models.fields.URLField', [], {'max_length': '200', 'null': 'True', 'blank': 'True'}),
+            'file': ('django.db.models.fields.files.FileField', [], {'max_length': '100', 'null': 'True', 'blank': 'True'}),
+            'height': ('django.db.models.fields.IntegerField', [], {'null': 'True', 'blank': 'True'}),
+            'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
+            'metadata': ('massmedia.fields.SerializedObjectField', [], {'blank': 'True'}),
+            'mime_type': ('django.db.models.fields.CharField', [], {'max_length': '150', 'null': 'True', 'blank': 'True'}),
+            'one_off_author': ('django.db.models.fields.CharField', [], {'max_length': '100', 'blank': 'True'}),
+            'original': ('django.db.models.fields.related.ForeignKey', [], {'blank': 'True', 'related_name': "'variations'", 'null': 'True', 'to': "orm['massmedia.Image']"}),
+            'public': ('django.db.models.fields.BooleanField', [], {'default': 'True'}),
+            'reproduction_allowed': ('django.db.models.fields.BooleanField', [], {'default': 'True'}),
+            'site': ('django.db.models.fields.related.ForeignKey', [], {'related_name': "'image_site'", 'to': "orm['sites.Site']"}),
+            'slug': ('django.db.models.fields.SlugField', [], {'unique': 'True', 'max_length': '50', 'db_index': 'True'}),
+            'thumb_height': ('django.db.models.fields.IntegerField', [], {'null': 'True', 'blank': 'True'}),
+            'thumb_width': ('django.db.models.fields.IntegerField', [], {'null': 'True', 'blank': 'True'}),
+            'thumbnail': ('django.db.models.fields.files.ImageField', [], {'max_length': '100', 'null': 'True', 'blank': 'True'}),
+            'title': ('django.db.models.fields.CharField', [], {'max_length': '255'}),
+            'widget_template': ('django.db.models.fields.CharField', [], {'max_length': '255', 'null': 'True', 'blank': 'True'}),
+            'width': ('django.db.models.fields.IntegerField', [], {'null': 'True', 'blank': 'True'})
+        },
+        'sites.site': {
+            'Meta': {'ordering': "('domain',)", 'object_name': 'Site', 'db_table': "'django_site'"},
+            'domain': ('django.db.models.fields.CharField', [], {'max_length': '100'}),
+            'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
+            'name': ('django.db.models.fields.CharField', [], {'max_length': '50'})
         }
     }
 

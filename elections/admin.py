@@ -2,8 +2,11 @@ from django.contrib import admin
 from .models import (Candidate, RaceCounty, RaceDistrict, CountyResult, 
                     DistrictResult, CandidateOffice, CandidateEducation, 
                     CandidateOffice, CandidatePhone, CandidateURL, State, LiveMap,
-                    ElectionEvent, Poll, PollResult, HotRace, HotRaceCandidate)
+                    ElectionEvent, Poll, PollResult, HotRace, HotRaceCandidate,
+                    CandidateDelegateCount, DelegateStateElection)
 from elections.forms import PollResultForm, HotRaceCandidateForm, HotRaceForm
+from genericcollection import GenericCollectionTabularInline
+from settings import HOT_RACE_RELATION_MODELS
 from .settings import IMAGE_MODEL
 
 if IMAGE_MODEL:
@@ -99,13 +102,32 @@ class HotRaceCandidateInline(admin.TabularInline):
     raw_id_fields = ['candidate']
     form = HotRaceCandidateForm
     extra = 2
+
+if HOT_RACE_RELATION_MODELS:
+    from elections.models import HotRaceRelation
     
+    class InlineHotRaceRelation(GenericCollectionTabularInline):
+        """ Inline Special Relation class for showing relations """
+        model = HotRaceRelation
+        template = 'admin/edit_inlines/gen_coll_tabular.html'
+            
 class HotRaceAdmin(admin.ModelAdmin):
     list_display = ('name', 'office', 'state', 'date')
     form = HotRaceForm
-    inlines = [
-        HotRaceCandidateInline
-    ]
+    if HOT_RACE_RELATION_MODELS:
+        inlines = [HotRaceCandidateInline, InlineHotRaceRelation]
+    else:
+        inlines = [HotRaceCandidateInline]
+
+class CandidateDelegateCountInline(admin.TabularInline):
+    model = CandidateDelegateCount
+    raw_id_fields = ['candidate']
+    extra = 0
+    
+class DelegateStateElectionAdmin(admin.ModelAdmin):
+    list_display = ('delegate_election', 'state', 'event_date',)
+    search_fields = ['state__name', 'state__state_id']
+    inlines = [CandidateDelegateCountInline]
     
 admin.site.register(RaceCounty)
 admin.site.register(RaceDistrict)
@@ -120,3 +142,4 @@ admin.site.register(State, StateAdmin)
 admin.site.register(LiveMap, LiveMapAdmin)
 admin.site.register(Poll, PollAdmin)
 admin.site.register(HotRace, HotRaceAdmin)
+admin.site.register(DelegateStateElection, DelegateStateElectionAdmin)

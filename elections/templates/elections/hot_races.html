@@ -1,5 +1,5 @@
 {% extends "elections/base.html" %}
-{% load elections_tags %}
+{% load elections_tags native image_size %}
 {% block content %}
 <h1>Hot Races</h1>
 
@@ -44,6 +44,29 @@
 			           {% endif %}   
 			        </td>
 		        {% endfor %}
+		      </tr>
+		        {% get_latest_objects_by_content_type hot_race stories story '' publish_date 6 as latest_stories %}
+		        <tr>
+		          <td colspan='100%'>
+			        {% for story in latest_stories %}
+		                       {% get_relation_type story mugshot_four_by_three as mugshotcropped %}
+		                       {% get_relation_type story mugshot as mugshot %}
+		                       <li class="mb pb {% if forloop.last %}{% else %}bb{% endif %}">
+		                       {% if mugshotcropped %}
+		                           {% smarter_size mugshotcropped.0.content_object.file 160x class="left mr" alt=mugshotcropped.0.content_object.caption %}
+		                       {% else %}
+		                           {% if mugshot %}
+		                               {% smarter_size mugshot.0.content_object.file 160x class="left mr" alt=mugshot.0.content_object.caption %}
+		                           {% endif %}
+		                       {% endif %}
+		                           <h4 style="font-weight: normal;"><a href="{{ story.get_absolute_url }}">{% if story.tease_headline %}{{ story.tease_headline }}{% else %}{% if story.tease_headline %}{{ story.tease_headline }}{% else %}{{ story.headline }}{% endif %}{% endif %}</a></h4>
+		                           <p class="small">By {{ story.author }} {% include "inc/origin.html" %}</p>
+		                           {% include "inc/stories/update_date.html" %}
+		                           <p>{{ story.teaser|striptags|safe }} {% include "inc/stories/publish_date.html" %}</p>
+		                           <div class="cb"></div>
+		                       </li>
+		               {% endfor %}
+	              </td>
 	       </tr>
 	            
 	     {% endfor %}
