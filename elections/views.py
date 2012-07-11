@@ -24,10 +24,17 @@ def state_detail(request, state):
         else:
             office_groups[ofc.office] = [ofc]
     events = ElectionEvent.objects.filter(state=state)
+    
+    try:
+        state_obj = State.objects.get(state_id='ZP')
+    except State.DoesNotExist:
+        state_obj = None
     if offices:
         return render_to_response(
             "elections/state_detail.html", 
             {
+                "state_obj":state_obj,
+                'state_id':state,
                 "offices": office_groups,
                 "all_offices": offices,
                 "state": offices[0].state_name,
