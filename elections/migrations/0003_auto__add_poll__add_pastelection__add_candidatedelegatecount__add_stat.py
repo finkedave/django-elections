@@ -8,6 +8,257 @@ class Migration(SchemaMigration):
 
     def forwards(self, orm):
         
+        # Adding model 'Poll'
+        db.create_table('elections_poll', (
+            ('id', self.gf('django.db.models.fields.AutoField')(primary_key=True)),
+            ('date', self.gf('django.db.models.fields.DateField')()),
+            ('state', self.gf('django.db.models.fields.related.ForeignKey')(to=orm['elections.State'], null=True, blank=True)),
+            ('source', self.gf('django.db.models.fields.CharField')(max_length=50)),
+            ('office', self.gf('django.db.models.fields.CharField')(max_length=1)),
+            ('url', self.gf('django.db.models.fields.URLField')(max_length=200, null=True, blank=True)),
+        ))
+        db.send_create_signal('elections', ['Poll'])
+
+        # Adding model 'PastElection'
+        db.create_table('elections_pastelection', (
+            ('election_id', self.gf('django.db.models.fields.CharField')(max_length=15, primary_key=True)),
+            ('year', self.gf('django.db.models.fields.IntegerField')()),
+            ('state_postal', self.gf('django.db.models.fields.CharField')(max_length=2)),
+            ('office', self.gf('django.db.models.fields.CharField')(max_length=1, null=True, blank=True)),
+            ('election_type', self.gf('django.db.models.fields.CharField')(max_length=2, null=True, blank=True)),
+            ('district_number', self.gf('django.db.models.fields.IntegerField')(null=True, blank=True)),
+            ('party', self.gf('django.db.models.fields.CharField')(max_length=1, null=True, blank=True)),
+            ('state_name', self.gf('django.db.models.fields.CharField')(max_length=25, null=True, blank=True)),
+            ('office_name', self.gf('django.db.models.fields.CharField')(max_length=100, null=True, blank=True)),
+            ('election_type_name', self.gf('django.db.models.fields.CharField')(max_length=100, null=True, blank=True)),
+            ('district_name', self.gf('django.db.models.fields.CharField')(max_length=25, null=True, blank=True)),
+            ('party_name', self.gf('django.db.models.fields.CharField')(max_length=100, null=True, blank=True)),
+            ('checksum', self.gf('django.db.models.fields.CharField')(max_length=32)),
+            ('slug', self.gf('django.db.models.fields.SlugField')(max_length=50, db_index=True)),
+        ))
+        db.send_create_signal('elections', ['PastElection'])
+
+        # Adding model 'CandidateDelegateCount'
+        db.create_table('elections_candidatedelegatecount', (
+            ('id', self.gf('django.db.models.fields.AutoField')(primary_key=True)),
+            ('delegate_state_election', self.gf('django.db.models.fields.related.ForeignKey')(to=orm['elections.DelegateStateElection'])),
+            ('candidate', self.gf('django.db.models.fields.related.ForeignKey')(to=orm['elections.Candidate'])),
+            ('delegate_count', self.gf('django.db.models.fields.IntegerField')()),
+            ('last_modified', self.gf('django.db.models.fields.DateTimeField')(auto_now=True, blank=True)),
+            ('winner', self.gf('django.db.models.fields.BooleanField')(default=False)),
+        ))
+        db.send_create_signal('elections', ['CandidateDelegateCount'])
+
+        # Adding model 'State'
+        db.create_table('elections_state', (
+            ('population', self.gf('django.db.models.fields.IntegerField')(null=True, blank=True)),
+            ('white_percent', self.gf('elections.models.PercentField')(null=True, max_digits=5, decimal_places=2, blank=True)),
+            ('black_percent', self.gf('elections.models.PercentField')(null=True, max_digits=5, decimal_places=2, blank=True)),
+            ('indian_alaska_native_percent', self.gf('elections.models.PercentField')(null=True, max_digits=5, decimal_places=2, blank=True)),
+            ('asian_percent', self.gf('elections.models.PercentField')(null=True, max_digits=5, decimal_places=2, blank=True)),
+            ('hawian_pacific_islander_percent', self.gf('elections.models.PercentField')(null=True, max_digits=5, decimal_places=2, blank=True)),
+            ('mixed_race_percent', self.gf('elections.models.PercentField')(null=True, max_digits=5, decimal_places=2, blank=True)),
+            ('other_race_percent', self.gf('elections.models.PercentField')(null=True, max_digits=5, decimal_places=2, blank=True)),
+            ('hispanic_percent', self.gf('elections.models.PercentField')(null=True, max_digits=5, decimal_places=2, blank=True)),
+            ('non_hispanic_white_percent', self.gf('elections.models.PercentField')(null=True, max_digits=5, decimal_places=2, blank=True)),
+            ('non_hispanic_black_percent', self.gf('elections.models.PercentField')(null=True, max_digits=5, decimal_places=2, blank=True)),
+            ('households_all_speak_other_than_english_percent', self.gf('elections.models.PercentField')(null=True, max_digits=5, decimal_places=2, blank=True)),
+            ('median_household_income', self.gf('django.db.models.fields.IntegerField')(null=True, blank=True)),
+            ('married_couple_both_work_percent', self.gf('elections.models.PercentField')(null=True, max_digits=5, decimal_places=2, blank=True)),
+            ('income_poverty_1999_percent', self.gf('elections.models.PercentField')(null=True, max_digits=5, decimal_places=2, blank=True)),
+            ('different_house_in_1995_percent', self.gf('elections.models.PercentField')(null=True, max_digits=5, decimal_places=2, blank=True)),
+            ('homes_heated_elec_percent', self.gf('elections.models.PercentField')(null=True, max_digits=5, decimal_places=2, blank=True)),
+            ('homes_heated_gas_percent', self.gf('elections.models.PercentField')(null=True, max_digits=5, decimal_places=2, blank=True)),
+            ('homes_heated_coal_percent', self.gf('elections.models.PercentField')(null=True, max_digits=5, decimal_places=2, blank=True)),
+            ('homes_heated_fuel_oil_percent', self.gf('elections.models.PercentField')(null=True, max_digits=5, decimal_places=2, blank=True)),
+            ('populations_65_and_up_percent', self.gf('elections.models.PercentField')(null=True, max_digits=5, decimal_places=2, blank=True)),
+            ('employed_civilians_16_and_up_percent', self.gf('elections.models.PercentField')(null=True, max_digits=5, decimal_places=2, blank=True)),
+            ('college_degree_percent', self.gf('elections.models.PercentField')(null=True, max_digits=5, decimal_places=2, blank=True)),
+            ('management_professional_worker_percent', self.gf('elections.models.PercentField')(null=True, max_digits=5, decimal_places=2, blank=True)),
+            ('sales_office_worker_percent', self.gf('elections.models.PercentField')(null=True, max_digits=5, decimal_places=2, blank=True)),
+            ('production_transport_worker_percent', self.gf('elections.models.PercentField')(null=True, max_digits=5, decimal_places=2, blank=True)),
+            ('unemployment_current', self.gf('elections.models.PercentField')(null=True, max_digits=5, decimal_places=2, blank=True)),
+            ('unemployment_date_current', self.gf('django.db.models.fields.DateField')(null=True, blank=True)),
+            ('unemployment_monthly_change', self.gf('elections.models.PercentField')(null=True, max_digits=5, decimal_places=2, blank=True)),
+            ('married_couple_family_percent', self.gf('elections.models.PercentField')(null=True, max_digits=5, decimal_places=2, blank=True)),
+            ('married_couple_family_w_children_percent', self.gf('elections.models.PercentField')(null=True, max_digits=5, decimal_places=2, blank=True)),
+            ('unmarried_partner_households_m_with_m_percent', self.gf('elections.models.PercentField')(null=True, max_digits=5, decimal_places=2, blank=True)),
+            ('unmarried_partner_households_f_with_f_percent', self.gf('elections.models.PercentField')(null=True, max_digits=5, decimal_places=2, blank=True)),
+            ('state_id', self.gf('django.db.models.fields.CharField')(max_length=2, primary_key=True)),
+            ('postal', self.gf('django.db.models.fields.CharField')(max_length=2)),
+            ('name', self.gf('django.db.models.fields.CharField')(max_length=25)),
+            ('us_senate_split', self.gf('django.db.models.fields.CharField')(max_length=100, null=True, blank=True)),
+            ('us_house_split', self.gf('django.db.models.fields.CharField')(max_length=100, null=True, blank=True)),
+            ('state_sentate_split', self.gf('django.db.models.fields.CharField')(max_length=100, null=True, blank=True)),
+            ('state_house_split', self.gf('django.db.models.fields.CharField')(max_length=100, null=True, blank=True)),
+            ('president', self.gf('django.db.models.fields.CharField')(max_length=100, null=True, blank=True)),
+            ('governor', self.gf('django.db.models.fields.CharField')(max_length=100, null=True, blank=True)),
+            ('us_senate_1', self.gf('django.db.models.fields.CharField')(max_length=100, null=True, blank=True)),
+            ('us_senate_2', self.gf('django.db.models.fields.CharField')(max_length=100, null=True, blank=True)),
+            ('us_house', self.gf('django.db.models.fields.CharField')(max_length=100, null=True, blank=True)),
+            ('questions', self.gf('django.db.models.fields.TextField')(null=True, blank=True)),
+            ('other_races', self.gf('django.db.models.fields.TextField')(null=True, blank=True)),
+            ('state_summary', self.gf('django.db.models.fields.TextField')(null=True, blank=True)),
+            ('capitol', self.gf('django.db.models.fields.CharField')(max_length=100, null=True, blank=True)),
+            ('nickname', self.gf('django.db.models.fields.CharField')(max_length=100, null=True, blank=True)),
+            ('bird', self.gf('django.db.models.fields.CharField')(max_length=100, null=True, blank=True)),
+            ('flower', self.gf('django.db.models.fields.CharField')(max_length=100, null=True, blank=True)),
+            ('motto_english', self.gf('django.db.models.fields.CharField')(max_length=255, null=True, blank=True)),
+            ('motto_other', self.gf('django.db.models.fields.CharField')(max_length=255, null=True, blank=True)),
+            ('electoral_votes', self.gf('django.db.models.fields.IntegerField')(null=True, blank=True)),
+            ('dem_delegates', self.gf('django.db.models.fields.IntegerField')(null=True, blank=True)),
+            ('rep_delegates', self.gf('django.db.models.fields.IntegerField')(null=True, blank=True)),
+            ('sos_last_name', self.gf('django.db.models.fields.CharField')(max_length=50, null=True, blank=True)),
+            ('sos_first_name', self.gf('django.db.models.fields.CharField')(max_length=50, null=True, blank=True)),
+            ('sos_middle_name', self.gf('django.db.models.fields.CharField')(max_length=50, null=True, blank=True)),
+            ('sos_suffix', self.gf('django.db.models.fields.CharField')(max_length=25, null=True, blank=True)),
+            ('sos_address', self.gf('django.db.models.fields.CharField')(max_length=255, null=True, blank=True)),
+            ('sos_city', self.gf('django.db.models.fields.CharField')(max_length=50, null=True, blank=True)),
+            ('sos_state', self.gf('django.db.models.fields.CharField')(max_length=25, null=True, blank=True)),
+            ('sos_zip', self.gf('django.db.models.fields.CharField')(max_length=25, null=True, blank=True)),
+            ('sos_phone', self.gf('django.db.models.fields.CharField')(max_length=30, null=True, blank=True)),
+            ('sos_fax', self.gf('django.db.models.fields.CharField')(max_length=30, null=True, blank=True)),
+            ('sos_email', self.gf('django.db.models.fields.CharField')(max_length=50, null=True, blank=True)),
+            ('sos_url', self.gf('django.db.models.fields.CharField')(max_length=100, null=True, blank=True)),
+            ('livemap_state_id', self.gf('django.db.models.fields.CharField')(max_length=3, null=True, blank=True)),
+            ('latitude', self.gf('django.db.models.fields.DecimalField')(null=True, max_digits=8, decimal_places=5, blank=True)),
+            ('longitude', self.gf('django.db.models.fields.DecimalField')(null=True, max_digits=8, decimal_places=5, blank=True)),
+            ('livemap_state_zoom', self.gf('django.db.models.fields.IntegerField')(null=True, blank=True)),
+            ('slug', self.gf('django.db.models.fields.SlugField')(max_length=50, db_index=True)),
+            ('checksum', self.gf('django.db.models.fields.CharField')(max_length=32)),
+        ))
+        db.send_create_signal('elections', ['State'])
+
+        # Adding model 'PastElectionResult'
+        db.create_table('elections_pastelectionresult', (
+            ('id', self.gf('django.db.models.fields.AutoField')(primary_key=True)),
+            ('election_id', self.gf('django.db.models.fields.CharField')(max_length=15)),
+            ('last_name', self.gf('django.db.models.fields.CharField')(max_length=50, null=True, blank=True)),
+            ('first_name', self.gf('django.db.models.fields.CharField')(max_length=50, null=True, blank=True)),
+            ('suffix', self.gf('django.db.models.fields.CharField')(max_length=25, null=True, blank=True)),
+            ('party', self.gf('django.db.models.fields.CharField')(max_length=25, null=True, blank=True)),
+            ('vote', self.gf('django.db.models.fields.IntegerField')(null=True, blank=True)),
+            ('percent', self.gf('elections.models.PercentField')(null=True, max_digits=5, decimal_places=2, blank=True)),
+            ('winner', self.gf('django.db.models.fields.NullBooleanField')(null=True, blank=True)),
+            ('checksum', self.gf('django.db.models.fields.CharField')(max_length=32)),
+        ))
+        db.send_create_signal('elections', ['PastElectionResult'])
+
+        # Adding unique constraint on 'PastElectionResult', fields ['election_id', 'last_name', 'first_name', 'suffix', 'party']
+        db.create_unique('elections_pastelectionresult', ['election_id', 'last_name', 'first_name', 'suffix', 'party'])
+
+        # Adding model 'PresidentialElectionResult'
+        db.create_table('elections_presidentialelectionresult', (
+            ('id', self.gf('django.db.models.fields.AutoField')(primary_key=True)),
+            ('state', self.gf('django.db.models.fields.related.ForeignKey')(to=orm['elections.State'])),
+            ('election_year', self.gf('django.db.models.fields.IntegerField')()),
+            ('dem_vote', self.gf('elections.models.PercentField')(null=True, max_digits=5, decimal_places=2, blank=True)),
+            ('rep_vote', self.gf('elections.models.PercentField')(null=True, max_digits=5, decimal_places=2, blank=True)),
+            ('dem_pres_primary_winner', self.gf('django.db.models.fields.CharField')(max_length=100, null=True, blank=True)),
+            ('dem_pres_primary_percent', self.gf('elections.models.PercentField')(null=True, max_digits=5, decimal_places=2, blank=True)),
+            ('rep_pres_primary_winner', self.gf('django.db.models.fields.CharField')(max_length=100, null=True, blank=True)),
+            ('rep_pres_primary_percent', self.gf('elections.models.PercentField')(null=True, max_digits=5, decimal_places=2, blank=True)),
+            ('checksum', self.gf('django.db.models.fields.CharField')(max_length=32)),
+        ))
+        db.send_create_signal('elections', ['PresidentialElectionResult'])
+
+        # Adding unique constraint on 'PresidentialElectionResult', fields ['state', 'election_year']
+        db.create_unique('elections_presidentialelectionresult', ['state_id', 'election_year'])
+
+        # Adding model 'LiveMap'
+        db.create_table('elections_livemap', (
+            ('id', self.gf('django.db.models.fields.AutoField')(primary_key=True)),
+            ('state', self.gf('django.db.models.fields.related.ForeignKey')(to=orm['elections.State'])),
+            ('race_type', self.gf('django.db.models.fields.CharField')(max_length=20)),
+            ('party', self.gf('django.db.models.fields.CharField')(max_length=20, null=True, blank=True)),
+            ('race_date', self.gf('django.db.models.fields.DateField')()),
+            ('delegate_count', self.gf('django.db.models.fields.IntegerField')(null=True, blank=True)),
+            ('json_file_name', self.gf('django.db.models.fields.CharField')(max_length=100)),
+            ('state_notice', self.gf('django.db.models.fields.TextField')(null=True, blank=True)),
+            ('update_results_start_date', self.gf('django.db.models.fields.DateTimeField')()),
+            ('update_results_end_date', self.gf('django.db.models.fields.DateTimeField')()),
+            ('template_name', self.gf('django.db.models.fields.CharField')(default='elections/live_maps/liveresults.html', max_length=70)),
+            ('slug', self.gf('django.db.models.fields.SlugField')(max_length=50, db_index=True)),
+        ))
+        db.send_create_signal('elections', ['LiveMap'])
+
+        # Adding model 'HotRaceCandidate'
+        db.create_table('elections_hotracecandidate', (
+            ('id', self.gf('django.db.models.fields.AutoField')(primary_key=True)),
+            ('hot_race', self.gf('django.db.models.fields.related.ForeignKey')(to=orm['elections.HotRace'])),
+            ('candidate', self.gf('django.db.models.fields.related.ForeignKey')(to=orm['elections.Candidate'], null=True, blank=True)),
+            ('write_in_candidate_name', self.gf('django.db.models.fields.CharField')(max_length=100, null=True, blank=True)),
+        ))
+        db.send_create_signal('elections', ['HotRaceCandidate'])
+
+        # Adding model 'District'
+        db.create_table('elections_district', (
+            ('population', self.gf('django.db.models.fields.IntegerField')(null=True, blank=True)),
+            ('white_percent', self.gf('elections.models.PercentField')(null=True, max_digits=5, decimal_places=2, blank=True)),
+            ('black_percent', self.gf('elections.models.PercentField')(null=True, max_digits=5, decimal_places=2, blank=True)),
+            ('indian_alaska_native_percent', self.gf('elections.models.PercentField')(null=True, max_digits=5, decimal_places=2, blank=True)),
+            ('asian_percent', self.gf('elections.models.PercentField')(null=True, max_digits=5, decimal_places=2, blank=True)),
+            ('hawian_pacific_islander_percent', self.gf('elections.models.PercentField')(null=True, max_digits=5, decimal_places=2, blank=True)),
+            ('mixed_race_percent', self.gf('elections.models.PercentField')(null=True, max_digits=5, decimal_places=2, blank=True)),
+            ('other_race_percent', self.gf('elections.models.PercentField')(null=True, max_digits=5, decimal_places=2, blank=True)),
+            ('hispanic_percent', self.gf('elections.models.PercentField')(null=True, max_digits=5, decimal_places=2, blank=True)),
+            ('non_hispanic_white_percent', self.gf('elections.models.PercentField')(null=True, max_digits=5, decimal_places=2, blank=True)),
+            ('non_hispanic_black_percent', self.gf('elections.models.PercentField')(null=True, max_digits=5, decimal_places=2, blank=True)),
+            ('households_all_speak_other_than_english_percent', self.gf('elections.models.PercentField')(null=True, max_digits=5, decimal_places=2, blank=True)),
+            ('median_household_income', self.gf('django.db.models.fields.IntegerField')(null=True, blank=True)),
+            ('married_couple_both_work_percent', self.gf('elections.models.PercentField')(null=True, max_digits=5, decimal_places=2, blank=True)),
+            ('income_poverty_1999_percent', self.gf('elections.models.PercentField')(null=True, max_digits=5, decimal_places=2, blank=True)),
+            ('different_house_in_1995_percent', self.gf('elections.models.PercentField')(null=True, max_digits=5, decimal_places=2, blank=True)),
+            ('homes_heated_elec_percent', self.gf('elections.models.PercentField')(null=True, max_digits=5, decimal_places=2, blank=True)),
+            ('homes_heated_gas_percent', self.gf('elections.models.PercentField')(null=True, max_digits=5, decimal_places=2, blank=True)),
+            ('homes_heated_coal_percent', self.gf('elections.models.PercentField')(null=True, max_digits=5, decimal_places=2, blank=True)),
+            ('homes_heated_fuel_oil_percent', self.gf('elections.models.PercentField')(null=True, max_digits=5, decimal_places=2, blank=True)),
+            ('populations_65_and_up_percent', self.gf('elections.models.PercentField')(null=True, max_digits=5, decimal_places=2, blank=True)),
+            ('employed_civilians_16_and_up_percent', self.gf('elections.models.PercentField')(null=True, max_digits=5, decimal_places=2, blank=True)),
+            ('college_degree_percent', self.gf('elections.models.PercentField')(null=True, max_digits=5, decimal_places=2, blank=True)),
+            ('management_professional_worker_percent', self.gf('elections.models.PercentField')(null=True, max_digits=5, decimal_places=2, blank=True)),
+            ('sales_office_worker_percent', self.gf('elections.models.PercentField')(null=True, max_digits=5, decimal_places=2, blank=True)),
+            ('production_transport_worker_percent', self.gf('elections.models.PercentField')(null=True, max_digits=5, decimal_places=2, blank=True)),
+            ('unemployment_current', self.gf('elections.models.PercentField')(null=True, max_digits=5, decimal_places=2, blank=True)),
+            ('unemployment_date_current', self.gf('django.db.models.fields.DateField')(null=True, blank=True)),
+            ('unemployment_monthly_change', self.gf('elections.models.PercentField')(null=True, max_digits=5, decimal_places=2, blank=True)),
+            ('married_couple_family_percent', self.gf('elections.models.PercentField')(null=True, max_digits=5, decimal_places=2, blank=True)),
+            ('married_couple_family_w_children_percent', self.gf('elections.models.PercentField')(null=True, max_digits=5, decimal_places=2, blank=True)),
+            ('unmarried_partner_households_m_with_m_percent', self.gf('elections.models.PercentField')(null=True, max_digits=5, decimal_places=2, blank=True)),
+            ('unmarried_partner_households_f_with_f_percent', self.gf('elections.models.PercentField')(null=True, max_digits=5, decimal_places=2, blank=True)),
+            ('district_id', self.gf('django.db.models.fields.CharField')(max_length=10, primary_key=True)),
+            ('district_number', self.gf('django.db.models.fields.IntegerField')()),
+            ('state_postal', self.gf('django.db.models.fields.CharField')(max_length=2)),
+            ('state_name', self.gf('django.db.models.fields.CharField')(max_length=25)),
+            ('district_name', self.gf('django.db.models.fields.CharField')(max_length=25)),
+            ('general_summary', self.gf('django.db.models.fields.TextField')(null=True, blank=True)),
+            ('slug', self.gf('django.db.models.fields.SlugField')(max_length=50, db_index=True)),
+            ('checksum', self.gf('django.db.models.fields.CharField')(max_length=32)),
+        ))
+        db.send_create_signal('elections', ['District'])
+
+        # Adding model 'DelegateElection'
+        db.create_table('elections_delegateelection', (
+            ('id', self.gf('django.db.models.fields.AutoField')(primary_key=True)),
+            ('year', self.gf('django.db.models.fields.IntegerField')()),
+            ('party', self.gf('django.db.models.fields.CharField')(max_length=10)),
+            ('race_type', self.gf('django.db.models.fields.CharField')(max_length=20)),
+            ('total_delegates', self.gf('django.db.models.fields.IntegerField')()),
+            ('delegates_needed', self.gf('django.db.models.fields.IntegerField')()),
+            ('slug', self.gf('django.db.models.fields.SlugField')(max_length=50, db_index=True)),
+        ))
+        db.send_create_signal('elections', ['DelegateElection'])
+
+        # Adding model 'PollResult'
+        db.create_table('elections_pollresult', (
+            ('id', self.gf('django.db.models.fields.AutoField')(primary_key=True)),
+            ('poll', self.gf('django.db.models.fields.related.ForeignKey')(to=orm['elections.Poll'])),
+            ('candidate', self.gf('django.db.models.fields.related.ForeignKey')(to=orm['elections.Candidate'], null=True, blank=True)),
+            ('write_in_candidate_name', self.gf('django.db.models.fields.CharField')(max_length=100, null=True, blank=True)),
+            ('result', self.gf('elections.models.PercentField')(max_digits=5, decimal_places=2)),
+        ))
+        db.send_create_signal('elections', ['PollResult'])
+
         # Adding model 'HotRaceRelation'
         db.create_table('elections_hotracerelation', (
             ('id', self.gf('django.db.models.fields.AutoField')(primary_key=True)),
@@ -19,11 +270,257 @@ class Migration(SchemaMigration):
         ))
         db.send_create_signal('elections', ['HotRaceRelation'])
 
+        # Adding model 'CandidateFEC'
+        db.create_table('elections_candidatefec', (
+            ('id', self.gf('django.db.models.fields.AutoField')(primary_key=True)),
+            ('committee_link', self.gf('django.db.models.fields.URLField')(max_length=200, null=True, blank=True)),
+            ('fec_candidate_id', self.gf('django.db.models.fields.CharField')(max_length=9, null=True, blank=True)),
+            ('name', self.gf('django.db.models.fields.CharField')(max_length=90, null=True, blank=True)),
+            ('office', self.gf('django.db.models.fields.CharField')(max_length=1, null=True, blank=True)),
+            ('office_state', self.gf('django.db.models.fields.CharField')(max_length=2, null=True, blank=True)),
+            ('district_number', self.gf('django.db.models.fields.CharField')(max_length=2, null=True, blank=True)),
+            ('party', self.gf('django.db.models.fields.CharField')(max_length=3, null=True, blank=True)),
+            ('status', self.gf('django.db.models.fields.CharField')(max_length=10, null=True, blank=True)),
+            ('mailing_addr1', self.gf('django.db.models.fields.TextField')(null=True, blank=True)),
+            ('mailing_addr2', self.gf('django.db.models.fields.TextField')(null=True, blank=True)),
+            ('mailing_city', self.gf('django.db.models.fields.CharField')(max_length=50, null=True, blank=True)),
+            ('mailing_state', self.gf('django.db.models.fields.CharField')(max_length=50, null=True, blank=True)),
+            ('mailing_zipcode', self.gf('django.db.models.fields.CharField')(max_length=10, null=True, blank=True)),
+            ('individual_itemized_contrib', self.gf('elections.models.CurrencyField')(null=True, max_digits=14, decimal_places=2, blank=True)),
+            ('individual_unitemized_contrib', self.gf('elections.models.CurrencyField')(null=True, max_digits=14, decimal_places=2, blank=True)),
+            ('individual_contrib', self.gf('elections.models.CurrencyField')(null=True, max_digits=14, decimal_places=2, blank=True)),
+            ('party_committee_contrib', self.gf('elections.models.CurrencyField')(null=True, max_digits=14, decimal_places=2, blank=True)),
+            ('other_committee_contrib', self.gf('elections.models.CurrencyField')(null=True, max_digits=14, decimal_places=2, blank=True)),
+            ('candidate_contrib', self.gf('elections.models.CurrencyField')(null=True, max_digits=14, decimal_places=2, blank=True)),
+            ('total_contrib', self.gf('elections.models.CurrencyField')(null=True, max_digits=14, decimal_places=2, blank=True)),
+            ('transfer_from_other_commitee', self.gf('elections.models.CurrencyField')(null=True, max_digits=14, decimal_places=2, blank=True)),
+            ('candidate_loan', self.gf('elections.models.CurrencyField')(null=True, max_digits=14, decimal_places=2, blank=True)),
+            ('other_loan', self.gf('elections.models.CurrencyField')(null=True, max_digits=14, decimal_places=2, blank=True)),
+            ('total_loan', self.gf('elections.models.CurrencyField')(null=True, max_digits=14, decimal_places=2, blank=True)),
+            ('offsets_to_operating_expenditures', self.gf('elections.models.CurrencyField')(null=True, max_digits=14, decimal_places=2, blank=True)),
+            ('offsets_to_fundraising', self.gf('elections.models.CurrencyField')(null=True, max_digits=14, decimal_places=2, blank=True)),
+            ('offsets_to_legal_accounting', self.gf('elections.models.CurrencyField')(null=True, max_digits=14, decimal_places=2, blank=True)),
+            ('other_receipts', self.gf('elections.models.CurrencyField')(null=True, max_digits=14, decimal_places=2, blank=True)),
+            ('total_receipts', self.gf('elections.models.CurrencyField')(null=True, max_digits=14, decimal_places=2, blank=True)),
+            ('operating_expenditure', self.gf('elections.models.CurrencyField')(null=True, max_digits=14, decimal_places=2, blank=True)),
+            ('exempt_legal_accounting_disbursement', self.gf('elections.models.CurrencyField')(null=True, max_digits=14, decimal_places=2, blank=True)),
+            ('fundraising_disbursement', self.gf('elections.models.CurrencyField')(null=True, max_digits=14, decimal_places=2, blank=True)),
+            ('transfer_to_other_committee', self.gf('elections.models.CurrencyField')(null=True, max_digits=14, decimal_places=2, blank=True)),
+            ('candidate_loan_repayment', self.gf('elections.models.CurrencyField')(null=True, max_digits=14, decimal_places=2, blank=True)),
+            ('other_loan_repayment', self.gf('elections.models.CurrencyField')(null=True, max_digits=14, decimal_places=2, blank=True)),
+            ('total_loan_repayment', self.gf('elections.models.CurrencyField')(null=True, max_digits=14, decimal_places=2, blank=True)),
+            ('individual_refund', self.gf('elections.models.CurrencyField')(null=True, max_digits=14, decimal_places=2, blank=True)),
+            ('party_committee_refund', self.gf('elections.models.CurrencyField')(null=True, max_digits=14, decimal_places=2, blank=True)),
+            ('other_committee_refund', self.gf('elections.models.CurrencyField')(null=True, max_digits=14, decimal_places=2, blank=True)),
+            ('total_contribution_refund', self.gf('elections.models.CurrencyField')(null=True, max_digits=14, decimal_places=2, blank=True)),
+            ('other_disbursement', self.gf('elections.models.CurrencyField')(null=True, max_digits=14, decimal_places=2, blank=True)),
+            ('total_disbursement', self.gf('elections.models.CurrencyField')(null=True, max_digits=14, decimal_places=2, blank=True)),
+            ('cash_on_hand_beginning_of_period', self.gf('elections.models.CurrencyField')(null=True, max_digits=14, decimal_places=2, blank=True)),
+            ('cash_on_hand_close_of_period', self.gf('elections.models.CurrencyField')(null=True, max_digits=14, decimal_places=2, blank=True)),
+            ('net_contribution', self.gf('elections.models.CurrencyField')(null=True, max_digits=14, decimal_places=2, blank=True)),
+            ('net_operating_expenditure', self.gf('elections.models.CurrencyField')(null=True, max_digits=14, decimal_places=2, blank=True)),
+            ('debt_owed_by_committee', self.gf('elections.models.CurrencyField')(null=True, max_digits=14, decimal_places=2, blank=True)),
+            ('debt_owed_to_committee', self.gf('elections.models.CurrencyField')(null=True, max_digits=14, decimal_places=2, blank=True)),
+            ('coverage_start_date', self.gf('django.db.models.fields.DateField')(null=True, blank=True)),
+            ('coverage_end_date', self.gf('django.db.models.fields.DateField')(null=True, blank=True)),
+            ('checksum', self.gf('django.db.models.fields.CharField')(max_length=32)),
+        ))
+        db.send_create_signal('elections', ['CandidateFEC'])
+
+        # Adding model 'HotRace'
+        db.create_table('elections_hotrace', (
+            ('id', self.gf('django.db.models.fields.AutoField')(primary_key=True)),
+            ('name', self.gf('django.db.models.fields.CharField')(max_length=100)),
+            ('state', self.gf('django.db.models.fields.related.ForeignKey')(to=orm['elections.State'], null=True, blank=True)),
+            ('office', self.gf('django.db.models.fields.CharField')(max_length=1)),
+            ('editorial_note', self.gf('django.db.models.fields.TextField')(null=True, blank=True)),
+            ('date', self.gf('django.db.models.fields.DateField')(null=True, blank=True)),
+            ('featured', self.gf('django.db.models.fields.BooleanField')(default=False)),
+        ))
+        db.send_create_signal('elections', ['HotRace'])
+
+        # Adding model 'DelegateStateElection'
+        db.create_table('elections_delegatestateelection', (
+            ('id', self.gf('django.db.models.fields.AutoField')(primary_key=True)),
+            ('event_date', self.gf('django.db.models.fields.DateField')(null=True, blank=True)),
+            ('delegate_election', self.gf('django.db.models.fields.related.ForeignKey')(to=orm['elections.DelegateElection'])),
+            ('state', self.gf('django.db.models.fields.related.ForeignKey')(to=orm['elections.State'])),
+        ))
+        db.send_create_signal('elections', ['DelegateStateElection'])
+
+        # Adding field 'PACContribution.last_name'
+        db.add_column('elections_paccontribution', 'last_name', self.gf('django.db.models.fields.CharField')(max_length=50, null=True, blank=True), keep_default=False)
+
+        # Adding field 'PACContribution.first_name'
+        db.add_column('elections_paccontribution', 'first_name', self.gf('django.db.models.fields.CharField')(max_length=50, null=True, blank=True), keep_default=False)
+
+        # Adding field 'PACContribution.middle_name'
+        db.add_column('elections_paccontribution', 'middle_name', self.gf('django.db.models.fields.CharField')(max_length=50, null=True, blank=True), keep_default=False)
+
+        # Changing field 'PACContribution.fec_record_number'
+        db.alter_column('elections_paccontribution', 'fec_record_number', self.gf('django.db.models.fields.CharField')(max_length=20, primary_key=True))
+
+        # Changing field 'PACContribution.recipient_committee'
+        db.alter_column('elections_paccontribution', 'recipient_committee', self.gf('django.db.models.fields.CharField')(max_length=100, null=True))
+
+        # Changing field 'PACContribution.pac_name'
+        db.alter_column('elections_paccontribution', 'pac_name', self.gf('django.db.models.fields.CharField')(max_length=100, null=True))
+
+        # Adding field 'CandidateMoney.total_receipts'
+        db.add_column('elections_candidatemoney', 'total_receipts', self.gf('django.db.models.fields.IntegerField')(null=True, blank=True), keep_default=False)
+
+        # Adding field 'CandidateMoney.candidate_loans'
+        db.add_column('elections_candidatemoney', 'candidate_loans', self.gf('django.db.models.fields.IntegerField')(null=True, blank=True), keep_default=False)
+
+        # Adding field 'CandidateMoney.other_loans'
+        db.add_column('elections_candidatemoney', 'other_loans', self.gf('django.db.models.fields.IntegerField')(null=True, blank=True), keep_default=False)
+
+        # Adding field 'CandidateMoney.candidate_loan_repayments'
+        db.add_column('elections_candidatemoney', 'candidate_loan_repayments', self.gf('django.db.models.fields.IntegerField')(null=True, blank=True), keep_default=False)
+
+        # Adding field 'CandidateMoney.other_loan_repayments'
+        db.add_column('elections_candidatemoney', 'other_loan_repayments', self.gf('django.db.models.fields.IntegerField')(null=True, blank=True), keep_default=False)
+
+        # Adding field 'CandidateMoney.individual_contributions'
+        db.add_column('elections_candidatemoney', 'individual_contributions', self.gf('django.db.models.fields.IntegerField')(null=True, blank=True), keep_default=False)
+
+        # Adding field 'CandidateMoney.pac_contributions'
+        db.add_column('elections_candidatemoney', 'pac_contributions', self.gf('django.db.models.fields.IntegerField')(null=True, blank=True), keep_default=False)
+
+        # Adding field 'CandidateMoney.ending_cash'
+        db.add_column('elections_candidatemoney', 'ending_cash', self.gf('django.db.models.fields.IntegerField')(null=True, blank=True), keep_default=False)
+
+        # Adding field 'CandidateMoney.date_of_last_report'
+        db.add_column('elections_candidatemoney', 'date_of_last_report', self.gf('django.db.models.fields.DateField')(null=True, blank=True), keep_default=False)
+
+        # Adding field 'CandidateMoney.total_disbursements'
+        db.add_column('elections_candidatemoney', 'total_disbursements', self.gf('django.db.models.fields.IntegerField')(null=True, blank=True), keep_default=False)
+
+        # Adding field 'Candidate.photo_fk'
+        db.add_column('elections_candidate', 'photo_fk', self.gf('django.db.models.fields.related.ForeignKey')(blank=True, related_name='alternate_photo', null=True, to=orm['massmedia.Image']), keep_default=False)
+
+        # Adding field 'Candidate.thumbnail_fk'
+        db.add_column('elections_candidate', 'thumbnail_fk', self.gf('django.db.models.fields.related.ForeignKey')(blank=True, related_name='alternate_thumbnail', null=True, to=orm['massmedia.Image']), keep_default=False)
+
+        # Adding field 'Candidate.is_presidential_candidate'
+        db.add_column('elections_candidate', 'is_presidential_candidate', self.gf('django.db.models.fields.BooleanField')(default=False), keep_default=False)
+
+        # Adding field 'Candidate.is_active'
+        db.add_column('elections_candidate', 'is_active', self.gf('django.db.models.fields.BooleanField')(default=True), keep_default=False)
+
 
     def backwards(self, orm):
         
+        # Removing unique constraint on 'PresidentialElectionResult', fields ['state', 'election_year']
+        db.delete_unique('elections_presidentialelectionresult', ['state_id', 'election_year'])
+
+        # Removing unique constraint on 'PastElectionResult', fields ['election_id', 'last_name', 'first_name', 'suffix', 'party']
+        db.delete_unique('elections_pastelectionresult', ['election_id', 'last_name', 'first_name', 'suffix', 'party'])
+
+        # Deleting model 'Poll'
+        db.delete_table('elections_poll')
+
+        # Deleting model 'PastElection'
+        db.delete_table('elections_pastelection')
+
+        # Deleting model 'CandidateDelegateCount'
+        db.delete_table('elections_candidatedelegatecount')
+
+        # Deleting model 'State'
+        db.delete_table('elections_state')
+
+        # Deleting model 'PastElectionResult'
+        db.delete_table('elections_pastelectionresult')
+
+        # Deleting model 'PresidentialElectionResult'
+        db.delete_table('elections_presidentialelectionresult')
+
+        # Deleting model 'LiveMap'
+        db.delete_table('elections_livemap')
+
+        # Deleting model 'HotRaceCandidate'
+        db.delete_table('elections_hotracecandidate')
+
+        # Deleting model 'District'
+        db.delete_table('elections_district')
+
+        # Deleting model 'DelegateElection'
+        db.delete_table('elections_delegateelection')
+
+        # Deleting model 'PollResult'
+        db.delete_table('elections_pollresult')
+
         # Deleting model 'HotRaceRelation'
         db.delete_table('elections_hotracerelation')
+
+        # Deleting model 'CandidateFEC'
+        db.delete_table('elections_candidatefec')
+
+        # Deleting model 'HotRace'
+        db.delete_table('elections_hotrace')
+
+        # Deleting model 'DelegateStateElection'
+        db.delete_table('elections_delegatestateelection')
+
+        # Deleting field 'PACContribution.last_name'
+        db.delete_column('elections_paccontribution', 'last_name')
+
+        # Deleting field 'PACContribution.first_name'
+        db.delete_column('elections_paccontribution', 'first_name')
+
+        # Deleting field 'PACContribution.middle_name'
+        db.delete_column('elections_paccontribution', 'middle_name')
+
+        # Changing field 'PACContribution.fec_record_number'
+        db.alter_column('elections_paccontribution', 'fec_record_number', self.gf('django.db.models.fields.CharField')(max_length=7, primary_key=True))
+
+        # Changing field 'PACContribution.recipient_committee'
+        db.alter_column('elections_paccontribution', 'recipient_committee', self.gf('django.db.models.fields.CharField')(default='', max_length=100))
+
+        # Changing field 'PACContribution.pac_name'
+        db.alter_column('elections_paccontribution', 'pac_name', self.gf('django.db.models.fields.CharField')(default='', max_length=100))
+
+        # Deleting field 'CandidateMoney.total_receipts'
+        db.delete_column('elections_candidatemoney', 'total_receipts')
+
+        # Deleting field 'CandidateMoney.candidate_loans'
+        db.delete_column('elections_candidatemoney', 'candidate_loans')
+
+        # Deleting field 'CandidateMoney.other_loans'
+        db.delete_column('elections_candidatemoney', 'other_loans')
+
+        # Deleting field 'CandidateMoney.candidate_loan_repayments'
+        db.delete_column('elections_candidatemoney', 'candidate_loan_repayments')
+
+        # Deleting field 'CandidateMoney.other_loan_repayments'
+        db.delete_column('elections_candidatemoney', 'other_loan_repayments')
+
+        # Deleting field 'CandidateMoney.individual_contributions'
+        db.delete_column('elections_candidatemoney', 'individual_contributions')
+
+        # Deleting field 'CandidateMoney.pac_contributions'
+        db.delete_column('elections_candidatemoney', 'pac_contributions')
+
+        # Deleting field 'CandidateMoney.ending_cash'
+        db.delete_column('elections_candidatemoney', 'ending_cash')
+
+        # Deleting field 'CandidateMoney.date_of_last_report'
+        db.delete_column('elections_candidatemoney', 'date_of_last_report')
+
+        # Deleting field 'CandidateMoney.total_disbursements'
+        db.delete_column('elections_candidatemoney', 'total_disbursements')
+
+        # Deleting field 'Candidate.photo_fk'
+        db.delete_column('elections_candidate', 'photo_fk_id')
+
+        # Deleting field 'Candidate.thumbnail_fk'
+        db.delete_column('elections_candidate', 'thumbnail_fk_id')
+
+        # Deleting field 'Candidate.is_presidential_candidate'
+        db.delete_column('elections_candidate', 'is_presidential_candidate')
+
+        # Deleting field 'Candidate.is_active'
+        db.delete_column('elections_candidate', 'is_active')
 
 
     models = {
@@ -109,7 +606,7 @@ class Migration(SchemaMigration):
             'delegate_state_election': ('django.db.models.fields.related.ForeignKey', [], {'to': "orm['elections.DelegateStateElection']"}),
             'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
             'last_modified': ('django.db.models.fields.DateTimeField', [], {'auto_now': 'True', 'blank': 'True'}),
-            'winner': ('django.db.models.fields.BooleanField', [], {'default': 'True'})
+            'winner': ('django.db.models.fields.BooleanField', [], {'default': 'False'})
         },
         'elections.candidateeducation': {
             'Meta': {'object_name': 'CandidateEducation'},
@@ -344,7 +841,7 @@ class Migration(SchemaMigration):
             'Meta': {'ordering': "['date']", 'object_name': 'HotRace'},
             'date': ('django.db.models.fields.DateField', [], {'null': 'True', 'blank': 'True'}),
             'editorial_note': ('django.db.models.fields.TextField', [], {'null': 'True', 'blank': 'True'}),
-            'featured': ('django.db.models.fields.BooleanField', [], {'default': 'True'}),
+            'featured': ('django.db.models.fields.BooleanField', [], {'default': 'False'}),
             'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
             'name': ('django.db.models.fields.CharField', [], {'max_length': '100'}),
             'office': ('django.db.models.fields.CharField', [], {'max_length': '1'}),

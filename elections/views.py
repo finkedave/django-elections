@@ -1,17 +1,17 @@
+import operator 
+
 from django.shortcuts import render_to_response
 from django.core.urlresolvers import reverse
-from django.http import HttpResponseRedirect, HttpResponseForbidden, Http404
+from django.http import HttpResponseRedirect, Http404
 from django.template import RequestContext
 from django.utils.translation import ugettext, ugettext_lazy as _
 from django.shortcuts import get_object_or_404
-from django.db.models import Q 
-import datetime
-from .models import (Candidate, RaceCounty, RaceDistrict, CountyResult, 
-                    DistrictResult, CandidateOffice, CandidateEducation, 
-                    CandidateOffice, CandidatePhone, CandidateURL, 
-                    ElectionEvent, PACContribution, State, District, LiveMap,
-                    DelegateElection, EVENT_PRESIDENTIAL_KEYWORD_LIST)
-import operator
+from django.db.models import Q
+
+from .models import (Candidate, CandidateOffice, ElectionEvent, 
+                     PACContribution, State, District, LiveMap, 
+                     DelegateElection, EVENT_PRESIDENTIAL_KEYWORD_LIST)
+
 def state_detail(request, state):
     """
     Get a list of stuff for the state
@@ -152,15 +152,15 @@ def create_historical_year_live_map_list(state, excluded_live_map_id=None):
     return historical_year_live_map_list
 
 def delegate_tracker(request, category, slug=None):
+    """ Delegate tracker view """
     if slug:
         delegate_election = get_object_or_404(DelegateElection, slug__iexact = slug)
     else:
         if category=='general':
             delegate_election_qs = DelegateElection.objects.filter(race_type=category)
         else:
-            print category
             delegate_election_qs = DelegateElection.objects.filter(party=category)
-        if delegate_election_qs.count()==0:
+        if delegate_election_qs.count() == 0:
             raise Http404
         delegate_election = delegate_election_qs.order_by('-year')[0]
     return render_to_response(
@@ -172,6 +172,7 @@ def delegate_tracker(request, category, slug=None):
         context_instance=RequestContext(request))
 
 def create_historical_delegate_election_list(excluded_id):
+    """ Helper method that creates historical delegate list """
     historical_delegate_election_qs = DelegateElection.objects
     if excluded_id:
         historical_delegate_election_qs = historical_delegate_election_qs.exclude(
@@ -181,7 +182,8 @@ def create_historical_delegate_election_list(excluded_id):
     for historical_delegate_election in historical_delegate_election_qs:
         if historical_delegate_election.year not in historical_year_delegate_election_dict:
             historical_year_delegate_election_dict[historical_delegate_election.year] = []
-        historical_year_delegate_election_dict[historical_delegate_election.year].append(historical_delegate_election)
+        historical_year_delegate_election_dict[historical_delegate_election.year].append(
+                                                        historical_delegate_election)
     
     
     if historical_year_delegate_election_dict:

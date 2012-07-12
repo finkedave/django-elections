@@ -86,18 +86,21 @@ class StateAdmin(admin.ModelAdmin):
               'longitude', 'livemap_state_zoom')
 
 class PollResultInline(admin.TabularInline):
+    """ Inline for Poll result """
     model = PollResult
     raw_id_fields = ['candidate']
     form = PollResultForm
     extra = 2
     
 class PollAdmin(admin.ModelAdmin):
+    """ Admin for the Poll model  """
     list_display = ('date', 'state', 'office', 'source')
     inlines = [
         PollResultInline
     ]
     
 class HotRaceCandidateInline(admin.TabularInline):
+    """ Inline for Hot race candidates """
     model = HotRaceCandidate
     raw_id_fields = ['candidate']
     form = HotRaceCandidateForm
@@ -112,6 +115,8 @@ if HOT_RACE_RELATION_MODELS:
         template = 'admin/edit_inlines/gen_coll_tabular.html'
             
 class HotRaceAdmin(admin.ModelAdmin):
+    """ Hot Race admin. Only show inline relations if in settings
+    HOT_RACE_RELATION_MODELS is set """
     list_display = ('name', 'office', 'state', 'date')
     form = HotRaceForm
     if HOT_RACE_RELATION_MODELS:
