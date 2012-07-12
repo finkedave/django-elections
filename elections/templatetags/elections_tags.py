@@ -3,7 +3,8 @@ from django import template
 from django.core.cache import cache
 from django.db.models import Sum
 from django.template import Variable, VariableDoesNotExist, TemplateSyntaxError
-from elections.models import PACContribution, Candidate, Poll, HotRace, CandidateFEC, CandidateMoney
+from elections.models import PACContribution, Candidate, Poll, HotRace, \
+                             CandidateFEC, CandidateMoney, HotRaceRelation
 from elections import to_bool
 
 from django.db.models import get_model
@@ -466,11 +467,24 @@ def get_latest_objects_by_content_type(hot_race, app_label, model_name,
     ordered_related_objects_id_list = ordered_related_objects.values_list('object_id', flat=True)
     
     m = get_model(app_label, model_name)
-    non_ordered_related_objects =  m.objects.filter(pk__in=non_ordered_related_objects_id_list)
-    ordered_related_objects = m.objects.filter(pk__in=ordered_related_objects_id_list)
     
+    relation_table = HotRaceRelation._meta.db_table
+    object_table = m._meta.db_table
+    relation_pk = HotRaceRelation._meta.pk.column
+    
+    order_by_list=['%s.order' % relation_table]
+    
+    non_ordered_related_objects =  m.objects.filter(pk__in=non_ordered_related_objects_id_list)
     if date_field:
         non_ordered_related_objects = non_ordered_related_objects.order_by('-%s' % date_field)
+        order_by_list.append('-%s' % date_field)
+    # now filter the the ordered related objects 
+    
+    ordered_related_objects = m.objects.filter(pk__in=ordered_related_objects_id_list).extra(
+                                tables=[relation_table],
+                                where=['%s.object_id=%s.%s' % (relation_table, object_table, relation_pk)],
+                                order_by=order_by_list
+                            )
     
     related_objects = list(ordered_related_objects)
     related_objects.extend(list(non_ordered_related_objects))
