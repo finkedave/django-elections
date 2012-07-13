@@ -1418,7 +1418,7 @@ class LiveMap(models.Model):
     party =  models.CharField(max_length=20, choices=PARTY_CHOICES, blank=True, null=True)
     race_date = models.DateField()
     delegate_count = models.IntegerField(blank=True, null=True)
-    json_file_name = models.CharField(max_length=100)
+    json_file_name = models.CharField(max_length=100, blank=True, null=True)
     state_notice = models.TextField(blank=True, null=True)
     
     update_results_start_date = models.DateTimeField(
@@ -1430,6 +1430,7 @@ class LiveMap(models.Model):
                                      default='elections/live_maps/liveresults.html',
         help_text=_("Example: 'elections/live_maps/2012_rep_primary_live_results.html'"))
     slug = models.SlugField()
+    uncontested = models.BooleanField(default=False)
     objects = models.Manager()
     published = PublishedManager()
     

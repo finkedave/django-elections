@@ -107,6 +107,9 @@ def write_results(electiondate, path_to_data=None, path_to_inits=None):
 
     # Detail county results
     for race in n.races:
+        # Gracefully handle no state or party being empty
+        if not race.party or not race.state:
+            continue
         party = race.party
         state = race.state.abbrev
         results = parse_race(race)
