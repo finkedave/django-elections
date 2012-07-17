@@ -24,9 +24,10 @@ def state_detail(request, state):
         else:
             office_groups[ofc.office] = [ofc]
     events = ElectionEvent.objects.filter(state=state)
-    
     try:
-        state_obj = State.objects.get(state_id='ZP')
+        state_obj = State.objects.get(state_id=state)
+        if state_obj.disabled:
+            raise Http404
     except State.DoesNotExist:
         state_obj = None
     if offices:
@@ -71,7 +72,10 @@ def state_profile(request, state):
     """
     state = get_object_or_404(State,
         slug__iexact = state)
-
+    
+    if state.disabled:
+        raise Http404
+    
     return render_to_response(
         "elections/state_profile.html", 
         {
@@ -102,7 +106,9 @@ def district_list(request, state):
     """
     state = get_object_or_404(State,
         slug__iexact = state)
-
+    
+    if state.displabled:
+        raise Http404
     return render_to_response(
         "elections/district_list.html", 
         {
@@ -121,6 +127,8 @@ def live_map(request, state, slug=None):
         raise Http404
     else:
         live_map = live_map_qs.latest('race_date')
+    if live_map.state.disabled:
+        raise Http404 
     return render_to_response(
                 live_map.template_name, 
                 {'livemap':live_map,

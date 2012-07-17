@@ -820,7 +820,8 @@ class ElectionEvent(models.Model):
             return ''
     
     def live_results(self):
-        return LiveMap.objects.filter(state=self.state, race_date=self.event_date, race_type=self.race_type)
+        return LiveMap.objects.filter(state=self.state, race_date=self.event_date, 
+                                      race_type=self.race_type)
     
     class Meta:
         ordering = ['event_date', 'state_name']
@@ -1048,6 +1049,16 @@ class State(Demographics):
     longitude = models.DecimalField(max_digits=8, decimal_places=5, 
                                     blank=True, null=True)
     livemap_state_zoom = models.IntegerField(blank=True, null=True)
+    
+    # These fields are due to certain states just being territores/filler states
+    # for foregin keys
+    
+    # Linkable means does it have its own landing page
+    linkable = models.BooleanField(default=True)
+    
+    # Disabled means its a state that should never be shown anywhere, its here
+    # just because it was in a data file
+    disabled = models.BooleanField(default=False)
     
     slug = models.SlugField()
     checksum = models.CharField(max_length=32)
@@ -1519,7 +1530,7 @@ class DelegateElection(models.Model):
         return ('elections.views.delegate_tracker', (), {'category':category, 'slug': self.slug })
     
     def get_state_elections(self):
-        return self.delegatestateelection_set.all()
+        return self.delegatestateelection_set.filter(state__disabled=False)
     
     def title(self):
         return self.__unicode__()

@@ -82,7 +82,7 @@ class LiveMapAdmin(admin.ModelAdmin):
 class StateAdmin(admin.ModelAdmin):
     """ State Admin, We only want to show the required fields and fields
     for live maps. We don't want one to change fields that are imported """
-    fields = ('state_id', 'postal', 'name', 'livemap_state_id', 'latitude', 
+    fields = ('state_id', 'postal', 'name', 'disabled', 'linkable', 'livemap_state_id', 'latitude', 
               'longitude', 'livemap_state_zoom')
 
 class PollResultInline(admin.TabularInline):
