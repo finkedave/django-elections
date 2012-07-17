@@ -434,7 +434,6 @@ class BaseAPResults(object):
             )
             # And add it to the global store
             self._races.update({race.ap_race_number: race})
-    
     def _init_reporting_units(self):
         """
         Download all the reporting units and load the data.
@@ -603,6 +602,8 @@ class BaseAPResults(object):
             
             # Pull the reporting unit
             reporting_unit = race.get_reporting_unit("%s%s" % (row['county_name'], county_number))
+            if not reporting_unit:
+                continue
             # Loop through all the candidates
             votes_cast = 0
             for cand in row['candidates']:
@@ -611,9 +612,12 @@ class BaseAPResults(object):
                 if not cand['candidate_number']:
                     continue
                 
+                
                 # Pull the existing candidate object
                 candidate = race.get_candidate(cand["candidate_number"])
                 
+                if not candidate:
+                    continue
                 # Pull the vote total
                 vote_count = int(cand['vote_count'])
                 
