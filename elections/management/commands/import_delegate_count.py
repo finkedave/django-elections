@@ -3,7 +3,7 @@ This script is used to create and update delegate counter tables. Command argume
 are required
 """
 from cStringIO import StringIO
-import csv
+import os
 from ftplib import FTP
 from xml.dom.minidom import parseString
 
@@ -19,20 +19,25 @@ class Command(BaseCommand):
         the delegate report based on another election. These variables must be changed so as
         not to override older elections """
         if len(a) < 2:
-            raise CommandError('Command arguments (year and race) type are required')
+            raise CommandError('Command arguments (year and race) type are required. [force, path to file]')
         year = int(a[0])
         race_type = a[1]
-        if len(a)==3:
+        if len(a)>3:
             force = to_bool(a[2])
         else:
             force = None
-        
+        if len (a)==4:
+            ftp_dir = a[3]
+        else:
+            ftp_dir = '/Delegate_Tracking/Reports'
         created_delegate_count = 0
         updated_delegate_count = 0
         skipped_delegate_count = 0
         buffer_ = StringIO()
+        
+        full_path = os.path.join(ftp_dir, 'delstate.xml')
         # Craft an FTP command that can pull the file
-        cmd = 'RETR /Delegate_Tracking/Reports/delstate.xml'
+        cmd = 'RETR %s' % full_path
         # Connect to the FTP server, issue the command and catch the data
         # in our buffer file object.
         try:
