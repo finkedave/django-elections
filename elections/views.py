@@ -30,6 +30,7 @@ def state_detail(request, state):
             raise Http404
     except State.DoesNotExist:
         state_obj = None
+        historical_year_live_map_list = None
     if offices:
         return render_to_response(
             "elections/state_detail.html", 
@@ -40,7 +41,6 @@ def state_detail(request, state):
                 "all_offices": offices,
                 "state": offices[0].state_name,
                 "events": events,
-                'historical_year_live_map_list':create_historical_year_live_map_list(state)
             },
             context_instance=RequestContext(request))
     else:
@@ -80,8 +80,6 @@ def state_profile(request, state):
         "elections/state_profile.html", 
         {
             'state':state,
-            'historical_year_live_map_list':create_historical_year_live_map_list(
-                                    state.state_id)
         },
         context_instance=RequestContext(request))
 
@@ -91,12 +89,11 @@ def district_profile(request, state, district):
     """
     district = get_object_or_404(District, 
         slug__iexact = district)
-
     return render_to_response(
         "elections/district_profile.html", 
         {
             'district':district,
-            'state':state
+            'state':district.state
         },
         context_instance=RequestContext(request))
 
@@ -133,31 +130,10 @@ def live_map(request, state, slug=None):
                 live_map.template_name, 
                 {'livemap':live_map,
                  'state':live_map.state,
-                 'historical_year_live_map_list':create_historical_year_live_map_list(
-                                                                    state, live_map.id)
+                 'historical_year_live_map_list':live_map.state.historical_year_live_map_list(
+                                                                     live_map.id)
                 },
         context_instance=RequestContext(request))
-
-def create_historical_year_live_map_list(state, excluded_live_map_id=None):
-    """ Create historical list of races by year """
-    
-    historical_map_qs = LiveMap.published.filter(state__slug=state)
-    if excluded_live_map_id:
-        historical_map_qs = historical_map_qs.exclude(id=excluded_live_map_id)
-    
-    historical_year_live_map_dict = {}
-    historical_year_live_map_list = []
-    for historical_map in historical_map_qs:
-        if historical_map.race_date.year not in historical_year_live_map_dict:
-            historical_year_live_map_dict[historical_map.race_date.year] = []
-        historical_year_live_map_dict[historical_map.race_date.year].append(historical_map)
-    
-    
-    if historical_year_live_map_dict:
-        historical_year_live_map_list = sorted(([year, live_map_list] \
-                        for year, live_map_list in historical_year_live_map_dict.iteritems()),
-                                               key = operator.itemgetter(0), reverse=True)
-    return historical_year_live_map_list
 
 def delegate_tracker(request, category, slug=None):
     """ Delegate tracker view """

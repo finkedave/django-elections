@@ -10,6 +10,7 @@ from django.db.models import Sum
 from settings import HOT_RACE_RELATION_MODELS, HOT_RACE_RELATIONS
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.contenttypes import generic
+import operator 
 STORAGE_MODEL = get_storage_class(IMAGE_STORAGE)
 
 class TestDataManager(models.Manager):
@@ -1167,6 +1168,27 @@ class State(Demographics):
             name_list.append(self.sos_suffix)
         return " ".join(name_list) 
     
+    def historical_year_live_map_list(self, excluded_live_map_id=None):
+        """ Create historical list of races by year """
+        
+        historical_map_qs = self.livemap_set.all()
+        if excluded_live_map_id:
+            historical_map_qs = historical_map_qs.exclude(id=excluded_live_map_id)
+        
+        historical_year_live_map_dict = {}
+        historical_year_live_map_list = []
+        for historical_map in historical_map_qs:
+            if historical_map.race_date.year not in historical_year_live_map_dict:
+                historical_year_live_map_dict[historical_map.race_date.year] = []
+            historical_year_live_map_dict[historical_map.race_date.year].append(historical_map)
+        
+        
+        if historical_year_live_map_dict:
+            historical_year_live_map_list = sorted(([year, live_map_list] \
+                            for year, live_map_list in historical_year_live_map_dict.iteritems()),
+                                                   key = operator.itemgetter(0), reverse=True)
+        return historical_year_live_map_list
+    
 class PresidentialElectionResult(models.Model):
     """ Model that holds info regarding presidential elections. Note this
     info is duplicated in profilestates and oldvoteresults. So really no 
@@ -1256,6 +1278,14 @@ class District(Demographics):
     def past_elections(self):
         return PastElection.objects.filter(state_postal=self.state_postal, 
                                 district_number=self.district_number)
+    @property
+    def state(self):
+        """ Didn't want foreign key relationship due to imports. Instead
+        just a property to link it to state """
+        try:
+            return State.objects.get(state_id=self.state_postal)
+        except State.DoesNotExist:
+            return None
         
 ELECTION_TYPE_CHOICES = (('G', 'General Election'),
                         ('GR', 'General Election Runoff'),
