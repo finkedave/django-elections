@@ -4,7 +4,7 @@ django-elections
 __version_info__ = {
     'major': 0,
     'minor': 5,
-    'micro': 0,
+    'micro': 3,
     'releaselevel': 'final',
     'serial': 1
 }

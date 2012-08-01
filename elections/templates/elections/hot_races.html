@@ -40,6 +40,9 @@
 			                    <a href='{% url candidate_detail candidate.slug %}'>{{candidate.full_name}}</a>
 			                {% endwith %}
 			            {% else %}
+			                {% if hot_race_candidate.write_in_photo_fk %}
+			                     <img src="{{ hot_race_candidate.write_in_photo_fk.photo.url }}" alt="{{ hot_race_candidate.write_in_candidate_name }}" title="{{ hot_race_candidate.write_in_candidate_name }}" class="candidateleft" /><br/>
+			                {% endif %}
 			                {{hot_race_candidate.write_in_candidate_name}}
 			           {% endif %}   
 			        </td>
@@ -111,8 +114,11 @@
 	                            <a href='{% url candidate_detail candidate.slug %}'>{{candidate.full_name}}</a>
 	                        {% endwith %}
 	                    {% else %}
-	                        {{hot_race_candidate.write_in_candidate_name}}
-	                   {% endif %}   
+                            {% if hot_race_candidate.write_in_photo_fk %}
+                                 <img src="{{ hot_race_candidate.write_in_photo_fk.file.url }}" alt="{{ hot_race_candidate.write_in_candidate_name }}" title="{{ hot_race_candidate.write_in_candidate_name }}" class="candidateleft" /><br/>
+                            {% endif %}
+                            {{hot_race_candidate.write_in_candidate_name}}
+                       {% endif %}
 	                </td>
 	            {% endfor %}
 	       </tr>

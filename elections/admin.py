@@ -98,11 +98,16 @@ class PollAdmin(admin.ModelAdmin):
     inlines = [
         PollResultInline
     ]
+
+if IMAGE_MODEL:
+    RAW_ID_FIELDS = ['candidate', 'write_in_photo_fk']
+else:
+    RAW_ID_FIELDS = ['candidate']
     
 class HotRaceCandidateInline(admin.TabularInline):
     """ Inline for Hot race candidates """
     model = HotRaceCandidate
-    raw_id_fields = ['candidate']
+    raw_id_fields = RAW_ID_FIELDS
     form = HotRaceCandidateForm
     extra = 2
 

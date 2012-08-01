@@ -1745,16 +1745,32 @@ if HOT_RACE_RELATION_MODELS:
         
         class Meta:
             ordering = ('order',)
-            
+
+CHALLENGER = 'C'
+INCUMBENT = 'I'
+
+HOTRACE_CANDIDATE_STATUS_CHOICES = ((CHALLENGER, 'Challenger'),
+                                    (INCUMBENT, 'Incumbent'),)
 class HotRaceCandidate(models.Model):
     """ Hot Race Candidate Object """
     hot_race = models.ForeignKey(HotRace)
     candidate = models.ForeignKey(Candidate, blank=True, null=True)
     write_in_candidate_name = models.CharField(max_length=100, blank=True, null=True)
-    
+    if IMAGE_MODEL:
+        write_in_photo_fk = models.ForeignKey(
+            get_model(*IMAGE_MODEL),
+            verbose_name="Write-In Photo",
+            blank=True, 
+            null=True,
+            )
+    status = models.CharField(max_length=100, choices=HOTRACE_CANDIDATE_STATUS_CHOICES)
     def __unicode__(self):
         return "%s" %(self.candidate_name)
     
+    class Meta:
+        """ We want the incumbent to be shown before the challengers"""
+        ordering = ('-status',)
+            
     @property
     def candidate_name(self):
         """ Return the candidates name for ease of use within templates. Note if
@@ -1764,7 +1780,25 @@ class HotRaceCandidate(models.Model):
             return self.candidate.last_name
         else:
             return self.write_in_candidate_name
-
+    
+    @property
+    def candidate_photo(self):
+        """ Return the candidates name for ease of use within templates. Note if
+        the object has a candidate then this returns the last name. Else it returns
+        the write in name """
+        if self.candidate:
+            return self.candidate.photo
+        elif hasattr(self, 'write_in_photo_fk') and self.write_in_photo_fk:
+            return self.write_in_photo_fk.file
+    
+    @property
+    def is_challenger(self):
+        return self.status==CHALLENGER
+    
+    @property
+    def is_incumbent(self):
+        return self.status==INCUMBENT
+    
 def calculate_checksum(obj, mapping=None):
     """ Universal checksum for models that uses the IMPORT_MAPPING attribute
     to make sure that it matches the checksum that will be calculated for an

@@ -21,7 +21,7 @@ def get_readme():
 DESC = " ".join(__import__('elections').__doc__.splitlines()).strip()
 
 setup(
-    name = "django-elections",
+    name = "django-elections-extended",
     version = __import__('elections').get_version().replace(' ', '-'),
     url = 'http://callowayproject.com/',
     author = 'coordt',
