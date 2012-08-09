@@ -43,7 +43,7 @@
 			                {% if hot_race_candidate.write_in_photo_fk %}
 			                     <img src="{{ hot_race_candidate.write_in_photo_fk.photo.url }}" alt="{{ hot_race_candidate.write_in_candidate_name }}" title="{{ hot_race_candidate.write_in_candidate_name }}" class="candidateleft" /><br/>
 			                {% endif %}
-			                {{hot_race_candidate.write_in_candidate_name}}
+			                {{hot_race_candidate.status}} {{hot_race_candidate.write_in_candidate_name}}
 			           {% endif %}   
 			        </td>
 		        {% endfor %}
