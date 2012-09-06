@@ -1748,9 +1748,18 @@ if HOT_RACE_RELATION_MODELS:
 
 CHALLENGER = 'C'
 INCUMBENT = 'I'
-
+OUTGOING = 'O'
 HOTRACE_CANDIDATE_STATUS_CHOICES = ((CHALLENGER, 'Challenger'),
-                                    (INCUMBENT, 'Incumbent'),)
+                                    (INCUMBENT, 'Incumbent'),
+                                    (OUTGOING, 'Outgoing'))
+
+REPUBLICAN = 'R'
+DEMOCRAT = 'D'
+OTHER = 'O'
+HOTRACE_PARTY_STATUS_CHOICES = ((REPUBLICAN, 'Republican'),
+                                    (DEMOCRAT, 'Democrat'),
+                                    (OTHER, 'Other'))
+
 class HotRaceCandidate(models.Model):
     """ Hot Race Candidate Object """
     hot_race = models.ForeignKey(HotRace)
@@ -1764,6 +1773,7 @@ class HotRaceCandidate(models.Model):
             null=True,
             )
     status = models.CharField(max_length=100, choices=HOTRACE_CANDIDATE_STATUS_CHOICES)
+    party = models.CharField(max_length=1, choices=HOTRACE_PARTY_STATUS_CHOICES)
     def __unicode__(self):
         return "%s" %(self.candidate_name)
     
@@ -1798,6 +1808,18 @@ class HotRaceCandidate(models.Model):
     @property
     def is_incumbent(self):
         return self.status==INCUMBENT
+    
+    @property
+    def is_outgoing(self):
+        return self.status==OUTGOING
+    
+    @property
+    def is_republican(self):
+        return self.party==REPUBLICAN
+    
+    @property
+    def is_democrat(self):
+        return self.party==DEMOCRAT
     
 def calculate_checksum(obj, mapping=None):
     """ Universal checksum for models that uses the IMPORT_MAPPING attribute

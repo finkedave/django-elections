@@ -104,7 +104,7 @@ def district_list(request, state):
     state = get_object_or_404(State,
         slug__iexact = state)
     
-    if state.displabled:
+    if state.disabled:
         raise Http404
     return render_to_response(
         "elections/district_list.html", 
