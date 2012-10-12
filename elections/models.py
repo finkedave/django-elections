@@ -793,18 +793,11 @@ class ElectionEvent(models.Model):
     def livemap_race_type(self):
         
         race_type = self.race_type
-        party = self.party
         # Note the Prmary. Ap doesn't know how to validate data very well
         if race_type=='primary':
-            if party=='republican':
-                return 'GOPPrim'
-            elif party=='democrat':
-                return 'DemPrim'
+            return 'Prim'
         elif race_type=='caucus':
-            if party=='republican':
-                return 'GOPCauc'
-            elif party=='democrat':
-                return 'DemCauc'
+            return 'Cauc'
         elif race_type=='general':
             return 'General'
         else:
@@ -841,7 +834,7 @@ class ElectionEvent(models.Model):
     
     def live_results(self):
         return LiveMap.objects.filter(state=self.state, race_date=self.event_date, 
-                                      race_type=self.livemap_race_type)
+                                      race_type__icontains=self.livemap_race_type)
     
     class Meta:
         ordering = ['event_date', 'state_name']
@@ -1488,7 +1481,7 @@ class LiveMap(models.Model):
     """ Model representing a live map """
     state = models.ForeignKey(State)
     race_type = models.CharField(max_length=20, choices=RACE_TYPE_CHOICES)
-    party =  models.CharField(max_length=20, choices=PARTY_CHOICES, blank=True, null=True)
+    #party =  models.CharField(max_length=20, choices=PARTY_CHOICES, blank=True, null=True)
     office = models.CharField(max_length=20, choices=OFFICE_CHOICES)
     seat_name = models.CharField(max_length=50, 
             help_text='ie race types (U.S. House = District_3 , Ammendments '
@@ -1516,7 +1509,7 @@ class LiveMap(models.Model):
         return self.title
     
     class Meta:
-        ordering = ['-race_date', 'race_type', 'office', 'party']
+        ordering = ['-race_date', 'race_type', 'office']
     
     def save(self, *args, **kwargs):
         """
@@ -1558,6 +1551,12 @@ class LiveMap(models.Model):
                                 'year':self.race_date.year, 'slug': self.slug })
 
     
+    def party(self):
+        if 'GOP' in self.race_type:
+            return 'Republican'
+        elif 'Dem' in self.race_type:
+            return 'Democrat'
+        
     @property
     def title(self):
         """ The title of the live. This is used to specify for historical maps """

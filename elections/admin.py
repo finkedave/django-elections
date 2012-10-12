@@ -77,7 +77,6 @@ class LiveMapAdmin(admin.ModelAdmin):
     list_display = ('state', 'race_date', 'race_type',
                     'update_results_start_date')
     list_filter = ('state', 'race_date')
-    exclude = ('party',)
     date_hierarchy = 'race_date'
     prepopulated_fields = {"slug": ('race_type', 'office', 'seat_name')}
     form = LiveMapForm
