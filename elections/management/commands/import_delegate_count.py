@@ -66,9 +66,16 @@ class Command(BaseCommand):
             total_delegates = int(node.getAttribute('dVotes'))
             party_id = node.getAttribute('pId')
             
+            if race_type=='primary':
+                de_race_type = '%sPrim' % party_id
+            elif race_type=='caucus':
+                de_race_type = '%sCauc' % party_id
+            else:
+                de_race_type = 'General'
             try:
-                delegate_election = DelegateElection.objects.get(year=year, party=party_id,
-                                                                     race_type=race_type)
+               
+                delegate_election = DelegateElection.objects.get(year=year,
+                                                                     race_type=de_race_type)
                 # This is a double check once AP switches the fiole to report on a different
                 # race/year. We don't want to overwrite data that we shouldn't be
                 if delegate_election.delegates_needed != delegates_needed or \
@@ -86,8 +93,7 @@ class Command(BaseCommand):
                                        'these values are supposed to change might destroy all past data.')
             except DelegateElection.DoesNotExist:
                 delegate_election = DelegateElection()
-                delegate_election.party = party_id
-                delegate_election.race_type = race_type
+                delegate_election.race_type = de_race_type
                 delegate_election.year = year
                 delegate_election.delegates_needed = delegates_needed
                 delegate_election.total_delegates = total_delegates

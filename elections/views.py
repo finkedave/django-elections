@@ -114,11 +114,11 @@ def district_list(request, state):
         },
         context_instance=RequestContext(request))
 
-def live_map(request, state, slug=None):
+def live_map(request, state, year=None, slug=None):
     """ Get a live map by params"""
     live_map_qs = LiveMap.objects.filter(state__slug=state)
     if slug:
-        live_map_qs = live_map_qs.filter(slug=slug)
+        live_map_qs = live_map_qs.filter(slug=slug, race_date__year=year)
     
     if not live_map_qs:
         raise Http404
@@ -135,18 +135,18 @@ def live_map(request, state, slug=None):
                 },
         context_instance=RequestContext(request))
 
-def delegate_tracker(request, category, slug=None):
+def delegate_tracker(request, year=None, slug=None):
     """ Delegate tracker view """
     if slug:
-        delegate_election = get_object_or_404(DelegateElection, slug__iexact = slug)
+        delegate_election = get_object_or_404(DelegateElection, year=year, slug__iexact = slug)
     else:
-        if category=='general':
-            delegate_election_qs = DelegateElection.objects.filter(race_type=category)
+        if year:
+            delegate_election_qs = DelegateElection.objects.filter(year=year)
         else:
-            delegate_election_qs = DelegateElection.objects.filter(party=category)
+            delegate_election_qs = DelegateElection.objects.all().order_by('-year')
         if delegate_election_qs.count() == 0:
             raise Http404
-        delegate_election = delegate_election_qs.order_by('-year')[0]
+        delegate_election = delegate_election_qs[0]
     return render_to_response(
                 'elections/delegate_tracker.html', 
                 {'delegate_election':delegate_election,

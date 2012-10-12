@@ -1,5 +1,6 @@
 # n.races[0].reporting_units[0].results
-from elections.ap import AP
+from decimal import Decimal, ROUND_DOWN
+from elections.ap import AP, Race
 from elections.settings import FTP_USER, FTP_PASSWORD, MAP_RESULTS_DEST
 from dateutil.parser import parse as dateparse
 import os
@@ -51,10 +52,16 @@ def parse_race(race):
     
     for county in race.counties:
         winning_votes = 0
+        if county.precincts_reporting_percent:
+            precincts_reporting_percent = str(Decimal(str(county.precincts_reporting_percent)).quantize(
+                                                        Decimal('.1'), rounding=ROUND_DOWN))
+        else:
+            precincts_reporting_percent = '0.0'
+        
         county_results[county.fips] = {
             "name": county.name,
             "precincts_reporting": county.precincts_reporting,
-            "precincts_reporting_percent": county.precincts_reporting_percent,
+            "precincts_reporting_percent": precincts_reporting_percent,
             "precincts_total": county.precincts_total,
             "results": []
         }
@@ -66,12 +73,14 @@ def parse_race(race):
             if result.vote_total_percent is None:
                 vote_total_percent = 0.0
             else:
-                vote_total_percent = result.vote_total_percent
+                vote_total_percent = str(Decimal(str(result.vote_total_percent)).quantize(
+                                                        Decimal('.1'), rounding=ROUND_DOWN))
+                
             county_results[county.fips]['results'].append({
                 "ap_natl_number": result.candidate.ap_natl_number,
                 "name": result.candidate.name,
                 "vote_total": vote_total,
-                "vote_total_percent": round(vote_total_percent, 1),
+                "vote_total_percent": vote_total_percent,
             })
             if vote_total > winning_votes:
                 winning_votes = vote_total
@@ -108,11 +117,25 @@ def write_results(electiondate, path_to_data=None, path_to_inits=None):
     # Detail county results
     for race in n.races:
         # Gracefully handle no state or party being empty
-        if not race.party or not race.state:
+        if not race.state:
             continue
-        party = race.party
-        state = race.state.abbrev
+    
         results = parse_race(race)
-        f = open(os.path.join(directory, "%s-%s-%s.json" % (electiondate, party, state)), "w")
+        
+        # Next block is trying to create detailed file name this is usuable as a file
+        state = race.state.abbrev
+        if race.race_type in Race._race_types:
+            race_type = Race._race_types[race.race_type][:7]
+        else:
+            race_type = race.race_type
+        office_name = race.office_name.replace('.', '').replace(' ', '_')
+        
+        # This is for amendments mostly since ammendments have / in them
+        seat_name = race.seat_name.replace('/', '-').replace(' ', '_').replace('_-_', '-')
+        file_name = "%s-%s-%s-%s" %(electiondate, state, race_type, office_name)
+        if seat_name:
+            file_name = "%s-%s" % (file_name, seat_name)
+        file_name = '%s.json' % file_name
+        f = open(os.path.join(directory, file_name), "w")
         f.write(json.dumps(results))
         f.close()

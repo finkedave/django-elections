@@ -289,15 +289,16 @@ class BaseAPResults(object):
         Returns a list of all the races reporting results.
         """
         return self._races.values()
-
-    def get_race(self, ap_race_number):
+    
+    def get_race(self, state_postal, ap_race_number):
         """
         Get a single Race object by it's ap_race_number
         """
+        race_key = Race.create_race_key(state_postal, ap_race_number)
         try:
-            return self._races[ap_race_number]
+            return self._races[race_key]
         except KeyError:
-            raise KeyError("The race you requested, %s, does not exist." % ap_race_number)
+            raise KeyError("The race you requested, %s, does not exist." % race_key)
 
     def filter_races(self, **kwargs):
         """
@@ -389,6 +390,8 @@ class BaseAPResults(object):
         """
         # Fetch the data from the FTP
         candidate_list = self.client._fetch_csv(self.candidate_file_path)
+        
+        count = {}
         # Loop through it...
         for cand in candidate_list:
             # Create a Candidate...
@@ -405,8 +408,9 @@ class BaseAPResults(object):
                 party = cand['polra_party'],
                 # use_suffix?
             )
-            self._races[candidate.ap_race_number].add_candidate(candidate)
-    
+            race_key = Race.create_race_key(cand['st_postal'], candidate.ap_race_number)
+            self._races[race_key].add_candidate(candidate)            
+            
     def _init_races(self):
         """
         Download all the races in the state and load the data.
@@ -432,8 +436,9 @@ class BaseAPResults(object):
                 party = race['rt_party_name'],
                 uncontested = race['ra_uncontested'] == '1',
             )
+            race_key = Race.create_race_key(race.state_postal, race.ap_race_number)
             # And add it to the global store
-            self._races.update({race.ap_race_number: race})
+            self._races.update({race_key: race})
     def _init_reporting_units(self):
         """
         Download all the reporting units and load the data.
@@ -520,7 +525,7 @@ class BaseAPResults(object):
         # Loop through them
         for row in state_data:
             # Get the race
-            race = self.get_race(row['race_number'])
+            race = self.get_race(row['state_postal'], row['race_number'])
             # Loop through the candidates in that race
             for cand in row['candidates']:
                 # And if it's a legit candidate, cuz sometimes they come out
@@ -583,7 +588,7 @@ class BaseAPResults(object):
         for row in flat_list:
             # Get the race
             try:
-                race = self.get_race(row['race_number'])
+                race = self.get_race(row['state_postal'], row['race_number'])
             except KeyError:
                 continue
             
@@ -911,7 +916,14 @@ class Race(object):
     @property
     def is_general(self):
         return self.race_type == 'G'
-
+    
+    @staticmethod
+    def create_race_key(state_postal, ap_race_number):
+        return '%s_%s' %(state_postal, ap_race_number)
+    
+    @property
+    def race_key(self):
+        return self.create_race_key(self.state_postal, self.ap_race_number)
 
 class ReportingUnit(object):
     """
@@ -928,8 +940,12 @@ class ReportingUnit(object):
         self.fips = fips
         self.num_reg_voters = num_reg_voters
         self.votes_cast = votes_cast
+        if not votes_cast:
+            self.votes_cast = 0
         self.precincts_total = precincts_total
         self.precincts_reporting = precincts_reporting
+        if not precincts_reporting:
+            self.precincts_reporting=0
         self.precincts_reporting_percent = precincts_reporting_percent
         self._results = {}
     

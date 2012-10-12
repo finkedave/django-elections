@@ -1,5 +1,5 @@
 from django import forms
-from elections.models import PollResult, HotRaceCandidate, HotRace
+from elections.models import PollResult, HotRaceCandidate, HotRace, LiveMap, DelegateElection
 
 class PollResultForm(forms.ModelForm):
     """ Form for making sure that a candidate object or 
@@ -37,4 +37,27 @@ class HotRaceCandidateForm(forms.ModelForm):
                 not self.cleaned_data['write_in_candidate_name']:
             raise forms.ValidationError("Candidate or 'write in candidate name' is required.")
         return self.cleaned_data
+
+class LiveMapForm(forms.ModelForm):
+    """ Form for making sure that a candidate object or 
+    candidate name is populated"""
+    class Meta:
+        model = LiveMap
+    
+    def clean(self):
+        slug = self.cleaned_data['slug']
+        year = self.cleaned_data['race_date'].year
+        error = False
+        try:
+            live_map = LiveMap.objects.get(race_date__year=year,
+                                      slug=slug)
+            if live_map.id != self.instance.id:
+                error = True
+        except LiveMap.DoesNotExist:
+                pass
+        if error:
+            raise forms.ValidationError(u"Please enter a different slug. Slug must be unique per race date year.")
+        return self.cleaned_data
+    
+
 

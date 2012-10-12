@@ -3,8 +3,9 @@ from .models import (Candidate, RaceCounty, RaceDistrict, CountyResult,
                     DistrictResult, CandidateOffice, CandidateEducation, 
                     CandidateOffice, CandidatePhone, CandidateURL, State, LiveMap,
                     ElectionEvent, Poll, PollResult, HotRace, HotRaceCandidate,
-                    CandidateDelegateCount, DelegateStateElection)
-from elections.forms import PollResultForm, HotRaceCandidateForm, HotRaceForm
+                    CandidateDelegateCount, DelegateStateElection, DelegateElection)
+from elections.forms import PollResultForm, HotRaceCandidateForm, HotRaceForm, \
+                LiveMapForm, DelegateElectionForm
 from genericcollection import GenericCollectionTabularInline
 from settings import HOT_RACE_RELATION_MODELS
 from .settings import IMAGE_MODEL
@@ -73,11 +74,13 @@ class ElectionEventAdmin(admin.ModelAdmin):
 
 class LiveMapAdmin(admin.ModelAdmin):
     """ Live Map Admin """
-    list_display = ('state', 'race_date', 'race_type', 'party', 
+    list_display = ('state', 'race_date', 'race_type',
                     'update_results_start_date')
-    list_filter = ('state', 'race_date', 'party')
+    list_filter = ('state', 'race_date')
+    exclude = ('party',)
     date_hierarchy = 'race_date'
-    prepopulated_fields = {"slug": ('race_date', 'party', 'state')}
+    prepopulated_fields = {"slug": ('race_type', 'office', 'seat_name')}
+    form = LiveMapForm
     
 class StateAdmin(admin.ModelAdmin):
     """ State Admin, We only want to show the required fields and fields

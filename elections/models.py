@@ -788,8 +788,27 @@ class ElectionEvent(models.Model):
             return 'general'
         else:
             return self.description
-    
-
+        
+    @property
+    def livemap_race_type(self):
+        
+        race_type = self.race_type
+        party = self.party
+        # Note the Prmary. Ap doesn't know how to validate data very well
+        if race_type=='primary':
+            if party=='republican':
+                return 'GOPPrim'
+            elif party=='democrat':
+                return 'DemPrim'
+        elif race_type=='caucus':
+            if party=='republican':
+                return 'GOPCauc'
+            elif party=='democrat':
+                return 'DemCauc'
+        elif race_type=='general':
+            return 'General'
+        else:
+            return self.race_type
     
     @property
     def level(self):
@@ -822,7 +841,7 @@ class ElectionEvent(models.Model):
     
     def live_results(self):
         return LiveMap.objects.filter(state=self.state, race_date=self.event_date, 
-                                      race_type=self.race_type)
+                                      race_type=self.livemap_race_type)
     
     class Meta:
         ordering = ['event_date', 'state_name']
@@ -1438,12 +1457,25 @@ class PastElectionResult(models.Model):
         return " ".join(name_list) 
 
 
-RACE_TYPE_CHOICES = (('general', 'General Election'),
-                    ('primary', 'Presidential Primary'),
-                    ('caucus', 'Caucus'))
+RACE_TYPE_CHOICES = (
+        ('DemPrim','Dem Primary'),
+        ('GOPPrim', 'GOP Primary'),
+        ('General', 'General Election'),
+        ('DemCauc', 'Dem Caucus'),
+        ('GOPCauc', 'GOP Caucus'),
+        ('Leberat', 'Libertarian'), # Not documented by the AP, but that's what it appears to be.
+    )
 
 PARTY_CHOICES = (('republican', 'Republican'),
                  ('democrat', 'Democrat'))
+
+OFFICE_CHOICES = (('President', 'Presidental'),
+                  ('US_House', 'U.S. House'),
+                  ('US_Senate', 'U.S. Senate'),
+                  ('Governor', 'Governor'),
+                  ('Amendment', 'Amendment'),
+                  ('Proposition', 'Proposition'),
+                  ('Issue', 'Issue'))
 
 class PublishedManager(models.Manager):
     """ Manager for querying only published artwork entries """
@@ -1457,6 +1489,11 @@ class LiveMap(models.Model):
     state = models.ForeignKey(State)
     race_type = models.CharField(max_length=20, choices=RACE_TYPE_CHOICES)
     party =  models.CharField(max_length=20, choices=PARTY_CHOICES, blank=True, null=True)
+    office = models.CharField(max_length=20, choices=OFFICE_CHOICES)
+    seat_name = models.CharField(max_length=50, 
+            help_text='ie race types (U.S. House = District_3 , Ammendments '
+                    'or Propositions = 1-No_Mandatory_Health_Coverage', 
+                                        blank=True, null=True)
     race_date = models.DateField()
     delegate_count = models.IntegerField(blank=True, null=True)
     json_file_name = models.CharField(max_length=100, blank=True, null=True)
@@ -1470,7 +1507,7 @@ class LiveMap(models.Model):
     template_name = models.CharField(_('template name'), max_length=70, 
                                      default='elections/live_maps/liveresults.html',
         help_text=_("Example: 'elections/live_maps/2012_rep_primary_live_results.html'"))
-    slug = models.SlugField()
+    slug = models.SlugField(blank=True, null=True)
     uncontested = models.BooleanField(default=False)
     objects = models.Manager()
     published = PublishedManager()
@@ -1479,7 +1516,7 @@ class LiveMap(models.Model):
         return self.title
     
     class Meta:
-        ordering = ['-race_date', 'race_type', 'party']
+        ordering = ['-race_date', 'race_type', 'office', 'party']
     
     def save(self, *args, **kwargs):
         """
@@ -1487,9 +1524,20 @@ class LiveMap(models.Model):
         """
         if not self.slug:
             from django.template.defaultfilters import slugify
+            if self.seat_name:
+                self.slug = slugify("%s %s" % ( self.race_type, 
+                                    self.office))[:50]
+            else:
+                self.slug = slugify("%s %s %s" % ( self.race_type, 
+                                    self.office, self.seat_name))[:50]
+        if not self.json_file_name:
+            race_date_string = self.race_date.strftime('%Y-%m-%d')
+            json_file_name = '%s-%s-%s-%s' %(race_date_string, self.state.postal, 
+                                        self.race_type, self.office)
+            if self.seat_name:
+                json_file_name = "%s-%s" %(json_file_name, self.seat_name)
+            self.json_file_name = "%s.json" % json_file_name            
             
-            self.slug = slugify("%s %s %s" % (self.race_date, 
-                                self.party, self.state.postal))
         super(LiveMap, self).save(*args, **kwargs)
         
     def race_complete(self):
@@ -1506,18 +1554,25 @@ class LiveMap(models.Model):
         """
         Get the absolute url for the candidate
         """
-        return ('elections.views.live_map', (), {'state':self.state.postal, 'slug': self.slug })
+        return ('elections.views.live_map', (), {'state':self.state.postal, 
+                                'year':self.race_date.year, 'slug': self.slug })
 
     
     @property
     def title(self):
         """ The title of the live. This is used to specify for historical maps """
-        if self.party:
-            return "%s %s %s" %(self.race_date.year, self.get_party_display(), 
-                                self.get_race_type_display())
-        else:
-            return "%s %s" %(self.race_date.year, self.get_race_type_display())
-
+        return "%s %s" %(self.race_date.year, self.description)
+    
+    @property
+    def description(self):
+        description_text = "%s %s" %(self.get_office_display(), self.get_race_type_display())
+        if self.seat_name:
+            description_text = "%s %s" %(description_text, self.get_seat_name_display())
+        return description_text
+    
+    def get_seat_name_display(self):
+        if self.seat_name:   
+            return self.seat_name.replace('_', ' ')
 DELEGATE_ELECTION_PARTY_CHOICES = (('Dem', 'Democrat'),
                                    ('GOP', 'Republican'),)
 class DelegateElection(models.Model):
@@ -1529,10 +1584,10 @@ class DelegateElection(models.Model):
     slug = models.SlugField()
     
     def __unicode__(self):
-        return "%s %s - %s" % (self.year, self.get_party_display(), self.get_race_type_display())
+        return "%s - %s" % (self.year,  self.get_race_type_display())
     
     class Meta:
-        ordering = ['-year', 'party']
+        ordering = ['-year', 'race_type']
     
     def save(self, *args, **kwargs):
         """
@@ -1540,12 +1595,7 @@ class DelegateElection(models.Model):
         """
         if not self.slug:
             from django.template.defaultfilters import slugify
-            if self.party:
-                self.slug = slugify("%s %s %s" % (self.year, 
-                                self.party, self.race_type))
-            else:
-                self.slug = slugify("%s %s" % (self.year, 
-                                self.race_type))
+            self.slug = slugify( self.race_type)
         super(DelegateElection, self).save(*args, **kwargs)
     
     @models.permalink
@@ -1553,11 +1603,7 @@ class DelegateElection(models.Model):
         """
         Get the absolute url for the candidate
         """
-        if not self.party:
-            category = self.race_type
-        else:
-            category = self.party
-        return ('elections.views.delegate_tracker', (), {'category':category, 'slug': self.slug })
+        return ('elections.views.delegate_tracker', (), {'year':self.year, 'slug': self.slug })
     
     def get_state_elections(self):
         return self.delegatestateelection_set.filter(state__disabled=False)
