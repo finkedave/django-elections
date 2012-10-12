@@ -1525,11 +1525,11 @@ class LiveMap(models.Model):
         if not self.slug:
             from django.template.defaultfilters import slugify
             if self.seat_name:
-                self.slug = slugify("%s %s" % ( self.race_type, 
-                                    self.office))[:50]
-            else:
                 self.slug = slugify("%s %s %s" % ( self.race_type, 
                                     self.office, self.seat_name))[:50]
+            else:
+                self.slug = slugify("%s %s" % ( self.race_type, 
+                                    self.office))[:50]
         if not self.json_file_name:
             race_date_string = self.race_date.strftime('%Y-%m-%d')
             json_file_name = '%s-%s-%s-%s' %(race_date_string, self.state.postal, 
