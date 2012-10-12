@@ -9,17 +9,22 @@ class Migration(DataMigration):
     def forwards(self, orm):
         "Write your forwards methods here."
         for livemap in LiveMap.objects.all():
-            if livemap.race_type=='primary':
-                if livemap.party=='republican':
-                    livemap.race_type='GOPPrim'
-                elif livemap.party=='democrat':
-                    livemap.race_type='DemPrim'
-            elif livemap.race_type=='caucus':
-                if livemap.party=='republican':
-                    livemap.race_type='GOPCauc'
-                elif livemap.party=='democrat':
-                    livemap.race_type='DemCauc'
-            elif livemap.race_type=='general':
+            party_result = db.execute('select party from %s where id=%s' % (
+                                                    LiveMap._meta.db_table, livemap.id))
+            if party_result:
+                party = party_result[0][0]
+                
+                if livemap.race_type=='primary':
+                    if party=='republican':
+                        livemap.race_type='GOPPrim'
+                    elif party=='democrat':
+                        livemap.race_type='DemPrim'
+                elif livemap.race_type=='caucus':
+                    if party=='republican':
+                        livemap.race_type='GOPCauc'
+                    elif party=='democrat':
+                        livemap.race_type='DemCauc'
+            else:
                 livemap.race_type='General'
                 
             livemap.office='President'
@@ -27,17 +32,22 @@ class Migration(DataMigration):
             livemap.slug=None
             livemap.save()
         for delegate_election in DelegateElection.objects.all():
-            if delegate_election.race_type=='primary':
-                if delegate_election.party=='GOP':
-                    delegate_election.race_type='GOPPrim'
-                elif delegate_election.party=='Dem':
-                    delegate_election.race_type='DemPrim'
-            elif delegate_election.race_type=='caucus':
-                if delegate_election.party=='GOP':
-                    delegate_election.race_type='GOPCauc'
-                elif delegate_election.party=='Dem':
-                    delegate_election.race_type='DemCauc'
-            elif delegate_election.race_type=='general':
+            party_result = db.execute('select party from %s where id=%s' % (
+                                                    LiveMap._meta.db_table, livemap.id))
+            if party_result:
+                party = party_result[0][0]
+                
+                if delegate_election.race_type=='primary':
+                    if party=='GOP':
+                        delegate_election.race_type='GOPPrim'
+                    elif party=='Dem':
+                        delegate_election.race_type='DemPrim'
+                elif delegate_election.race_type=='caucus':
+                    if party=='GOP':
+                        delegate_election.race_type='GOPCauc'
+                    elif party=='Dem':
+                        delegate_election.race_type='DemCauc'
+            else:
                 delegate_election.race_type='General'
 
             # Now delete slug so it will be re-created correctly

@@ -1576,7 +1576,7 @@ DELEGATE_ELECTION_PARTY_CHOICES = (('Dem', 'Democrat'),
                                    ('GOP', 'Republican'),)
 class DelegateElection(models.Model):
     year = models.IntegerField()
-    party = models.CharField(max_length=10, choices=DELEGATE_ELECTION_PARTY_CHOICES)
+    #party = models.CharField(max_length=10, choices=DELEGATE_ELECTION_PARTY_CHOICES)
     race_type = models.CharField(max_length=20, choices=RACE_TYPE_CHOICES)
     total_delegates = models.IntegerField()
     delegates_needed = models.IntegerField()
@@ -1604,6 +1604,12 @@ class DelegateElection(models.Model):
         """
         return ('elections.views.delegate_tracker', (), {'year':self.year, 'slug': self.slug })
     
+    def party(self):
+        if 'GOP' in self.race_type:
+            return 'Republican'
+        elif 'Dem' in self.race_type:
+            return 'Democrat'
+        
     def get_state_elections(self):
         return self.delegatestateelection_set.filter(state__disabled=False)
     
