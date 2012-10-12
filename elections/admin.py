@@ -1,11 +1,11 @@
 from django.contrib import admin
 from .models import (Candidate, RaceCounty, RaceDistrict, CountyResult, 
-                    DistrictResult, CandidateOffice, CandidateEducation, 
+                    DistrictResult, CandidateEducation, 
                     CandidateOffice, CandidatePhone, CandidateURL, State, LiveMap,
                     ElectionEvent, Poll, PollResult, HotRace, HotRaceCandidate,
-                    CandidateDelegateCount, DelegateStateElection, DelegateElection)
+                    CandidateDelegateCount, DelegateStateElection)
 from elections.forms import PollResultForm, HotRaceCandidateForm, HotRaceForm, \
-                LiveMapForm, DelegateElectionForm
+                LiveMapForm
 from genericcollection import GenericCollectionTabularInline
 from settings import HOT_RACE_RELATION_MODELS
 from .settings import IMAGE_MODEL
