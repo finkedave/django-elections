@@ -47,16 +47,17 @@ class LiveMapForm(forms.ModelForm):
     def clean(self):
         slug = self.cleaned_data['slug']
         year = self.cleaned_data['race_date'].year
+        state = self.cleaned_data['state']
         error = False
         try:
             live_map = LiveMap.objects.get(race_date__year=year,
-                                      slug=slug)
+                                      slug=slug, state__state_id=state.state_id)
             if live_map.id != self.instance.id:
                 error = True
         except LiveMap.DoesNotExist:
                 pass
         if error:
-            raise forms.ValidationError(u"Please enter a different slug. Slug must be unique per race date year.")
+            raise forms.ValidationError(u"Please enter a different slug. Slug must be unique per state, race date year.")
         return self.cleaned_data
     
 

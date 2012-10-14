@@ -74,9 +74,9 @@ class ElectionEventAdmin(admin.ModelAdmin):
 
 class LiveMapAdmin(admin.ModelAdmin):
     """ Live Map Admin """
-    list_display = ('state', 'race_date', 'race_type',
+    list_display = ('state', 'race_date', 'race_type', 'office', 'seat_name',
                     'update_results_start_date')
-    list_filter = ('state', 'race_date')
+    list_filter = ('state', 'race_date', 'race_type', 'office')
     date_hierarchy = 'race_date'
     prepopulated_fields = {"slug": ('race_type', 'office', 'seat_name')}
     form = LiveMapForm
