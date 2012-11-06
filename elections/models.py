@@ -833,7 +833,7 @@ class ElectionEvent(models.Model):
             return ''
     
     def live_results(self):
-        return LiveMap.objects.filter(state=self.state, race_date=self.event_date, 
+        return LiveMap.published.filter(state=self.state, race_date=self.event_date, 
                                       race_type__icontains=self.livemap_race_type)
     
     class Meta:
@@ -1183,7 +1183,7 @@ class State(Demographics):
     def historical_year_live_map_list(self, excluded_live_map_id=None):
         """ Create historical list of races by year """
         
-        historical_map_qs = self.livemap_set.all()
+        historical_map_qs = LiveMap.published.filter(state__state_id=self.state_id)
         if excluded_live_map_id:
             historical_map_qs = historical_map_qs.exclude(id=excluded_live_map_id)
         
@@ -1474,8 +1474,8 @@ class PublishedManager(models.Manager):
     """ Manager for querying only published artwork entries """
     def get_query_set(self):
         queryset = super(PublishedManager, self).get_query_set()
-        return queryset.filter(
-            update_results_start_date__lte=datetime.now())
+        return queryset.filter(update_results_start_date__lte=datetime.now(),
+            active=True)
                    
 class LiveMap(models.Model):
     """ Model representing a live map """
@@ -1502,6 +1502,7 @@ class LiveMap(models.Model):
         help_text=_("Example: 'elections/live_maps/2012_rep_primary_live_results.html'"))
     slug = models.SlugField(blank=True, null=True)
     uncontested = models.BooleanField(default=False)
+    active = models.BooleanField(default=True)
     objects = models.Manager()
     published = PublishedManager()
     

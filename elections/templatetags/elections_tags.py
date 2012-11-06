@@ -4,9 +4,9 @@ from django.core.cache import cache
 from django.db.models import Sum
 from django.template import Variable, VariableDoesNotExist, TemplateSyntaxError
 from elections.models import PACContribution, Candidate, Poll, HotRace, \
-                             CandidateFEC, CandidateMoney, HotRaceRelation
+                             CandidateFEC, CandidateMoney, HotRaceRelation, LiveMap
 from elections import to_bool
-
+from dateutil.parser import parse as dateparse
 from django.db.models import get_model
 
 register = template.Library()
@@ -624,4 +624,73 @@ class FECMoneyCandidateListNode(template.Node):
         
         context[self.var_name] = candidate_list
         
+        return ''
+    
+    
+    
+@register.tag('get_live_maps')
+def do_get_live_maps(parser, token):
+    """
+    Get the latest objects by special
+    
+    {% do_get_live_maps [race_date] [race_type] [office] [order_by] as var %}
+    """
+    proper_form = "{% do_get_live_maps [race_date] [race_type] [office] [order_by] as var %}"
+    bits = token.split_contents()
+    
+    counter = 0
+        
+    race_date = None
+    race_type = None
+    office = None
+    order_by = None
+    tag_name = None
+    if bits[-2] != 'as':
+        raise TemplateSyntaxError("%s tag shoud be in the form: %s" % (bits[0], proper_form))
+    variables = [tag_name, race_date, race_type, office, order_by, bits[-1]]
+    # Set the variables if sent in
+    try:
+        for bit in bits:
+            if bit=='as':
+                break
+            variables[counter] = bit.replace("'", '').replace('"', '')
+            counter += 1
+    except IndexError:
+        raise template.TemplateSyntaxError(
+                "%s tag shoud be in the form: %s" % (tag_name, proper_form))
+    
+    return LiveMapsNode(*variables[1:])
+
+
+class LiveMapsNode(template.Node):
+    """ Node that gets livemaps based on arguments"""
+    def __init__(self, race_date, race_type,  office, order_by, var_name):
+        self.race_date = None
+        self.race_type = None
+        self.office = None
+        self.order_by = None
+        if race_date:
+            self.race_date = Variable(race_date)
+        if race_type:
+            self.race_type = race_type
+        if office:
+            self.office = office
+        if order_by:
+            self.order_by = order_by
+        self.var_name = var_name
+    
+    def render(self, context):
+        """ Puts the maps into context """
+        qs = LiveMap.published
+        if self.race_date:
+            race_date = resolve(self.race_date, context)
+            race_date_obj = dateparse(race_date)
+            qs = qs.filter(race_date=race_date_obj)
+        if self.race_type:
+            qs = qs.filter(race_type=self.race_type)
+        if self.office:
+            qs = qs.filter(office=self.office)
+        if self.order_by:
+            qs = qs.order_by(self.order_by)
+        context[self.var_name] = qs
         return ''
