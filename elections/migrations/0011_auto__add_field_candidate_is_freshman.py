@@ -1,62 +1,21 @@
 # encoding: utf-8
 import datetime
 from south.db import db
-from south.v2 import DataMigration
+from south.v2 import SchemaMigration
 from django.db import models
-from elections.models import LiveMap, DelegateElection
-class Migration(DataMigration):
+
+class Migration(SchemaMigration):
 
     def forwards(self, orm):
-        "Write your forwards methods here."
-        for livemap in LiveMap.objects.all():
-            party_result = db.execute('select party from %s where id=%s' % (
-                                                    LiveMap._meta.db_table, livemap.id))
-            if party_result:
-                party = party_result[0][0]
-                
-                if livemap.race_type=='primary':
-                    if party=='republican':
-                        livemap.race_type='GOPPrim'
-                    elif party=='democrat':
-                        livemap.race_type='DemPrim'
-                elif livemap.race_type=='caucus':
-                    if party=='republican':
-                        livemap.race_type='GOPCauc'
-                    elif party=='democrat':
-                        livemap.race_type='DemCauc'
-            else:
-                livemap.race_type='General'
-                
-            livemap.office='President'
-            # Now delete slug so it will be re-created correctly
-            livemap.slug=None
-            livemap.save()
-        for delegate_election in DelegateElection.objects.all():
-            party_result = db.execute('select party from %s where id=%s' % (
-                                                    LiveMap._meta.db_table, livemap.id))
-            if party_result:
-                party = party_result[0][0]
-                
-                if delegate_election.race_type=='primary':
-                    if party=='GOP':
-                        delegate_election.race_type='GOPPrim'
-                    elif party=='Dem':
-                        delegate_election.race_type='DemPrim'
-                elif delegate_election.race_type=='caucus':
-                    if party=='GOP':
-                        delegate_election.race_type='GOPCauc'
-                    elif party=='Dem':
-                        delegate_election.race_type='DemCauc'
-            else:
-                delegate_election.race_type='General'
-
-            # Now delete slug so it will be re-created correctly
-            delegate_election.slug=None
-            delegate_election.save()
+        
+        # Adding field 'Candidate.is_freshman'
+        db.add_column('elections_candidate', 'is_freshman', self.gf('django.db.models.fields.BooleanField')(default=False), keep_default=False)
 
 
     def backwards(self, orm):
-        "Write your backwards methods here."
+        
+        # Deleting field 'Candidate.is_freshman'
+        db.delete_column('elections_candidate', 'is_freshman')
 
 
     models = {
@@ -112,6 +71,7 @@ class Migration(DataMigration):
             'gender': ('django.db.models.fields.CharField', [], {'max_length': '1', 'null': 'True', 'blank': 'True'}),
             'hispanic': ('django.db.models.fields.CharField', [], {'max_length': '100', 'null': 'True', 'blank': 'True'}),
             'is_active': ('django.db.models.fields.BooleanField', [], {'default': 'True'}),
+            'is_freshman': ('django.db.models.fields.BooleanField', [], {'default': 'False'}),
             'is_presidential_candidate': ('django.db.models.fields.BooleanField', [], {'default': 'False'}),
             'junior': ('django.db.models.fields.CharField', [], {'max_length': '16', 'null': 'True', 'blank': 'True'}),
             'last_name': ('django.db.models.fields.CharField', [], {'max_length': '64', 'null': 'True', 'blank': 'True'}),
@@ -662,4 +622,3 @@ class Migration(DataMigration):
     }
 
     complete_apps = ['elections']
-
