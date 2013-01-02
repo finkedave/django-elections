@@ -103,6 +103,8 @@ class Candidate(models.Model):
     thumbnail_height = models.IntegerField(blank=True, null=True)
     is_presidential_candidate = models.BooleanField(default=False)
     is_active = models.BooleanField(default=True)
+    is_freshman = models.BooleanField(default=False)
+    
     @property
     def full_name(self):
         names =[]

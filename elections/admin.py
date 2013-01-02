@@ -46,7 +46,8 @@ class CandidateAdmin(admin.ModelAdmin):
     fieldsets = (
         (None, {
             'fields': (('first_name', 'middle_name', 'last_name', 'junior'), 
-                       ('residence_place', 'residence_state'),'is_presidential_candidate', 'is_active'),
+                       ('residence_place', 'residence_state'),'is_presidential_candidate', 'is_active',
+                       'is_freshman'),
         }),
         ('Demographics', {
             'fields': ('gender', ('ethnicity', 'hispanic'), 'religion',)
