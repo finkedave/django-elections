@@ -17,11 +17,125 @@ colors = ['#8DD3C7', '#FFFFB3', '#BEBADA', '#FB8072', '#80B1D3', '#FDB462',
 '#B3DE69', '#FCCDE5', '#D9D9D9', '#BC80BD', '#CCEBC5', '#FFED6F',]
 legend_tmpl = "<tr><td style='width=32px;background-color:%(color)s'>&nbsp;</td><td>%(name)s</td><td>%(vote_total)s</td><td>%(vote_percent)#.2f%%</td></tr>"
 
+# This is the working parse_race. For primaries. 
 
+#def parse_race(race):
+#    """
+#    Loop through the reporting units and return a dict for output
+#    """
+#    county_results = {} # key = county number
+#    county_winners = {} # key = county number, 
+#    candidate_colors = {}
+#    legend = ['<table id="legendtable">']
+#    candidates = []
+#    total_votes = 0
+#    
+#    for i, cand in enumerate(race.candidates):
+#        cand_vote_total = getattr(cand, 'vote_total', 0)
+#        total_votes += cand_vote_total
+#        candidate_colors[cand.ap_natl_number] = colors[i]
+#        candidates.append({
+#            'name': cand.name, 
+#            'color': colors[i], 
+#            'vote_total': cand_vote_total, 
+#            'vote_percent': 0, 
+#            'delegates': cand.delegates,
+#        })
+#    candidate_colors['No winner'] = "#999"
+#    candidates.sort(key=lambda x: x['vote_total'], reverse=True)
+#    for cand in candidates:
+#        if total_votes:
+#            cand['vote_percent'] = round(cand['vote_total']/float(total_votes) * 100, 1) 
+#        else:
+#            cand['vote_percent'] = 0.0
+#        legend.append(legend_tmpl % cand)
+#    legend.append('</table>')
+#    
+#    for county in race.counties:
+#        winning_votes = 0
+#        if county.precincts_reporting_percent:
+#            precincts_reporting_percent = str(Decimal(str(county.precincts_reporting_percent)).quantize(
+#                                                        Decimal('.1'), rounding=ROUND_DOWN))
+#        else:
+#            precincts_reporting_percent = '0.0'
+#        
+#        county_results[county.fips] = {
+#            "name": county.name,
+#            "precincts_reporting": county.precincts_reporting,
+#            "precincts_reporting_percent": precincts_reporting_percent,
+#            "precincts_total": county.precincts_total,
+#            "results": []
+#        }
+#        for result in county.results:
+#            if result.vote_total is None:
+#                vote_total = 0
+#            else:
+#                vote_total = result.vote_total
+#            if result.vote_total_percent is None:
+#                vote_total_percent = 0.0
+#            else:
+#                vote_total_percent = str(Decimal(str(result.vote_total_percent)).quantize(
+#                                                        Decimal('.1'), rounding=ROUND_DOWN))
+#                
+#            county_results[county.fips]['results'].append({
+#                "ap_natl_number": result.candidate.ap_natl_number,
+#                "name": result.candidate.name,
+#                "vote_total": vote_total,
+#                "vote_total_percent": vote_total_percent,
+#            })
+#            if vote_total > winning_votes:
+#                winning_votes = vote_total
+#                county_winners[county.fips] = result.candidate.ap_natl_number
+#            elif vote_total == winning_votes:
+#                county_winners[county.fips] = 'No winner'
+#        county_results[county.fips]['results'].sort(key=lambda x: x['vote_total'], reverse=True)
+#    
+#    return {
+#        "candidate_colors": candidate_colors, 
+#        "legend": "".join(legend),
+#        "county_results": county_results,
+#        "county_winners": county_winners
+#    }
+
+# this is the hack on election night to force it to work for president election making it so once 
+# a candidate won. ALl counties are colored
 def parse_race(race):
     """
     Loop through the reporting units and return a dict for output
     """
+    
+    f = open('/nfs-media/twt/static/election_results/US_topofticket/flat/US.txt', 'r')
+    import csv
+    spamreader = csv.reader(f, delimiter=';')
+    good_results = []
+    total_votes = 0
+    winner_id = None
+    for line in spamreader:
+        if line[2]==race.state.abbrev and line[10]=='President':
+            index = 19
+            while index < len(line)-11:
+                vote_count = int(line[index+9])
+                total_votes += vote_count
+                winner = line[index+10]
+                cand_id = line[index + 11]
+                first_name = line[index + 3]
+                last_name = line[index + 5]
+                
+                if winner == 'X':
+                    winner_id = cand_id
+                    winner = True
+                else:
+                    winner = False
+                good_results.append({'first_name':first_name, 'last_name':last_name, 'cand_id':cand_id, 'vote_count':vote_count,
+                                'winner':winner})
+                index += 12
+    if not winner_id:
+        winning_vote_count = 0
+        for result in good_results:
+            if result['vote_count'] > winning_vote_count:
+                winner_id = result['cand_id']
+                winning_vote_count = result['vote_count']
+        
     county_results = {} # key = county number
     county_winners = {} # key = county number, 
     candidate_colors = {}
@@ -29,17 +143,20 @@ def parse_race(race):
     candidates = []
     total_votes = 0
     
-    for i, cand in enumerate(race.candidates):
-        cand_vote_total = getattr(cand, 'vote_total', 0)
+    i=0
+    for result in good_results:
+        cand_vote_total = result['vote_count']
         total_votes += cand_vote_total
-        candidate_colors[cand.ap_natl_number] = colors[i]
+        candidate_colors[result['cand_id']] = colors[i]
         candidates.append({
-            'name': cand.name, 
+            'name': '%s %s' % (result['first_name'], result['last_name']), 
             'color': colors[i], 
             'vote_total': cand_vote_total, 
             'vote_percent': 0, 
-            'delegates': cand.delegates,
+            'delegates': 0,
         })
+        i+=1
+        
     candidate_colors['No winner'] = "#999"
     candidates.sort(key=lambda x: x['vote_total'], reverse=True)
     for cand in candidates:
@@ -52,6 +169,8 @@ def parse_race(race):
     
     for county in race.counties:
         winning_votes = 0
+        
+        
         if county.precincts_reporting_percent:
             precincts_reporting_percent = str(Decimal(str(county.precincts_reporting_percent)).quantize(
                                                         Decimal('.1'), rounding=ROUND_DOWN))
@@ -60,9 +179,9 @@ def parse_race(race):
         
         county_results[county.fips] = {
             "name": county.name,
-            "precincts_reporting": county.precincts_reporting,
-            "precincts_reporting_percent": precincts_reporting_percent,
-            "precincts_total": county.precincts_total,
+            "precincts_reporting": 100,
+            "precincts_reporting_percent": 100,
+            "precincts_total": 10,
             "results": []
         }
         for result in county.results:
@@ -75,16 +194,25 @@ def parse_race(race):
             else:
                 vote_total_percent = str(Decimal(str(result.vote_total_percent)).quantize(
                                                         Decimal('.1'), rounding=ROUND_DOWN))
-                
-            county_results[county.fips]['results'].append({
-                "ap_natl_number": result.candidate.ap_natl_number,
-                "name": result.candidate.name,
-                "vote_total": vote_total,
-                "vote_total_percent": vote_total_percent,
-            })
-            if vote_total > winning_votes:
-                winning_votes = vote_total
-                county_winners[county.fips] = result.candidate.ap_natl_number
+            
+
+            if winner_id and int(winner_id) == int(result.candidate.ap_natl_number):
+                county_results[county.fips]['results'].append({
+                    "ap_natl_number": result.candidate.ap_natl_number,
+                    "name": result.candidate.name,
+                    "vote_total": 100,
+                    "vote_total_percent": 100,
+                })
+            else:
+                county_results[county.fips]['results'].append({
+                    "ap_natl_number": result.candidate.ap_natl_number,
+                    "name": result.candidate.name,
+                    "vote_total": 0,
+                    "vote_total_percent": 0,
+                })
+            if winner_id:
+                winning_votes = 100
+                county_winners[county.fips] = winner_id
             elif vote_total == winning_votes:
                 county_winners[county.fips] = 'No winner'
         county_results[county.fips]['results'].sort(key=lambda x: x['vote_total'], reverse=True)

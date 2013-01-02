@@ -25,3 +25,14 @@ class Command(NoArgsCommand):
                     pass
             print "Downloading '%s' to '%s'" % (path, dpath)
             client.get_file(path, DEST_PATH, path[1:])
+        
+        path = '/US_topofticket/flat/US.txt'
+        DEST_PATH = '/nfs-media/twt/static/election_results/'
+        dpath = os.path.join(DEST_PATH, path[1:])
+        ddir, dfile = os.path.split(dpath)
+        if not os.path.exists(ddir):
+            try:
+                os.makedirs(ddir)
+            except OSError, e:
+                pass
+        client.get_file(path, DEST_PATH, path[1:])
